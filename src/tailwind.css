@@ -1,0 +1,14 @@
+/* Import Tailwind theme and utilities, but EXCLUDE base preflight to protect Bootstrap UI */
+@import "tailwindcss/theme";
+@import "tailwindcss/utilities";
+
+@theme {
+  --color-urora-primary: #3f51b5;
+  --color-urora-success: #009688;
+  --color-urora-info: #2196F3;
+  --color-urora-warning: #ffb430;
+  --color-urora-danger: #ef4f4c;
+  --color-urora-dark: #2d3b48;
+  --color-urora-bg: #eaeaea;
+  --font-sans: "Rubik", sans-serif;
+}
