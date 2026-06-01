@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { login } from '../services/api';
 
 const inputStyle = {
   color: '#2d3b48',
@@ -13,6 +14,10 @@ const inputStyle = {
 
 export default function Login() {
   const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     document.body.classList.remove('fixed-left');
@@ -26,10 +31,21 @@ export default function Login() {
     };
   }, []);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    localStorage.setItem('urora_logged_in', 'true');
-    navigate('/');
+    setError('');
+    setLoading(true);
+    try {
+      const data = await login(email, password);
+      localStorage.setItem('vigil_parent_token', data.token);
+      localStorage.setItem('vigil_parent_user', JSON.stringify(data.user || data));
+      localStorage.setItem('urora_logged_in', 'true');
+      navigate('/');
+    } catch (err) {
+      setError(err.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -95,14 +111,22 @@ export default function Login() {
                       <div className="px-3 pb-3">
                         <form className="form-horizontal mb-0" onSubmit={handleLogin}>
 
+                          {error && (
+                            <div className="alert alert-danger py-2 mb-3" style={{ borderRadius: '8px', fontSize: '14px' }}>
+                              {error}
+                            </div>
+                          )}
+
                           <div className="form-group row">
                             <div className="col-12">
                               <input
                                 className="form-control"
                                 style={inputStyle}
-                                type="text"
+                                type="email"
                                 required
-                                placeholder="Email or Mobile Number"
+                                placeholder="Email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                               />
                             </div>
                           </div>
@@ -115,6 +139,8 @@ export default function Login() {
                                 type="password"
                                 required
                                 placeholder="Password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
                               />
                             </div>
                           </div>
@@ -134,11 +160,12 @@ export default function Login() {
                               <motion.button 
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                className="btn btn-primary btn-block waves-effect waves-light" 
+                                className="btn btn-primary btn-block waves-effect waves-light"
                                 type="submit"
+                                disabled={loading}
                                 style={{ borderRadius: '8px', padding: '10px' }}
                               >
-                                Log In
+                                {loading ? 'Signing in...' : 'Log In'}
                               </motion.button>
                             </div>
                           </div>
