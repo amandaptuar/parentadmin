@@ -34,3 +34,5 @@ export { LocationTracking } from './LocationTracking';
 export { ScreenTime } from './ScreenTime';
 export { Reports } from './Reports';
 export { NotificationsCenter } from './NotificationsCenter';
+export { HelpCenter } from './HelpCenter';
+

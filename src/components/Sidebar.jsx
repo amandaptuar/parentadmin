@@ -43,6 +43,14 @@ export default function Sidebar({ onClose }) {
                       </Link>
                   </li>
 
+                  <li>
+                      <Link to="/help-center" className="waves-effect">
+                          <i className="mdi mdi-help-circle-outline"></i>
+                          <span> Help Center</span>
+                      </Link>
+                  </li>
+
+
                   <li className="menu-title">PARENT MONITORING</li>
 
                   <li>

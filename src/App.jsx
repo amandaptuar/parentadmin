@@ -11,7 +11,7 @@ import Register from './components/Register';
 import {
   LiveActivity, CallsMonitoring, SmsMonitoring, WhatsappMonitoring,
   SocialMonitoring, GalleryMonitoring, LocationTracking,
-  ScreenTime, Reports, NotificationsCenter
+  ScreenTime, Reports, NotificationsCenter, HelpCenter
 } from './pages/parenting';
 
 // Guard: only allow access to dashboard/profile if logged in
@@ -53,6 +53,7 @@ function App() {
         }>
           <Route path="/" element={<Dashboard />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/help-center" element={<HelpCenter />} />
           
           {/* Parent Monitoring Routes */}
           <Route path="/dashboard/live-activity" element={<LiveActivity />} />
