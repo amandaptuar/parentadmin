@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { register } from '../services/api';
 
 const inputStyle = {
   color: '#2d3b48',
@@ -13,18 +14,30 @@ const inputStyle = {
 
 export default function Register() {
   const navigate = useNavigate();
+  const [form, setForm]       = useState({ name: '', email: '', password: '' });
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState('');
 
   useEffect(() => {
     if (window.$) {
       window.$('#status').fadeOut();
       window.$('#preloader').delay(350).fadeOut('slow');
-      window.$('body').delay(350).css({ 'overflow': 'visible' });
+      window.$('body').delay(350).css({ overflow: 'visible' });
     }
   }, []);
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
-    navigate('/login');
+    setError('');
+    setLoading(true);
+    try {
+      await register({ name: form.name, email: form.email, password: form.password });
+      navigate('/login');
+    } catch (err) {
+      setError(err.message || 'Registration failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -89,41 +102,32 @@ export default function Register() {
                       </div>
 
                       <div className="px-3 pb-3">
+                        {error && (
+                          <div className="alert alert-danger py-2 mb-3" style={{ borderRadius: '8px', fontSize: '13px' }}>{error}</div>
+                        )}
                         <form className="form-horizontal mb-0" onSubmit={handleRegister}>
 
                           <div className="form-group row">
                             <div className="col-12">
-                              <input
-                                className="form-control"
-                                style={inputStyle}
-                                type="email"
-                                required
-                                placeholder="Email Address"
-                              />
+                              <input className="form-control" style={inputStyle} type="text" required
+                                placeholder="Full Name" value={form.name}
+                                onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
                             </div>
                           </div>
 
                           <div className="form-group row">
                             <div className="col-12">
-                              <input
-                                className="form-control"
-                                style={inputStyle}
-                                type="text"
-                                required
-                                placeholder="Username"
-                              />
+                              <input className="form-control" style={inputStyle} type="email" required
+                                placeholder="Email Address" value={form.email}
+                                onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
                             </div>
                           </div>
 
                           <div className="form-group row">
                             <div className="col-12">
-                              <input
-                                className="form-control"
-                                style={inputStyle}
-                                type="password"
-                                required
-                                placeholder="Password"
-                              />
+                              <input className="form-control" style={inputStyle} type="password" required
+                                placeholder="Password" value={form.password}
+                                onChange={e => setForm(f => ({ ...f, password: e.target.value }))} />
                             </div>
                           </div>
 
@@ -140,14 +144,15 @@ export default function Register() {
 
                           <div className="form-group text-center row mt-4">
                             <div className="col-12">
-                              <motion.button 
+                              <motion.button
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                className="btn btn-raised btn-primary btn-block waves-effect waves-light" 
+                                className="btn btn-primary btn-block waves-effect waves-light"
                                 type="submit"
+                                disabled={loading}
                                 style={{ borderRadius: '8px', padding: '10px' }}
                               >
-                                Register
+                                {loading ? 'Creating account...' : 'Register'}
                               </motion.button>
                             </div>
                           </div>

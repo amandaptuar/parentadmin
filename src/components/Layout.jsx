@@ -18,7 +18,9 @@ export default function Layout() {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('urora_logged_in');
+    localStorage.removeItem('vigil_token');
+    localStorage.removeItem('vigil_user');
+    localStorage.removeItem('vigil_selected_child');
     navigate('/login');
   };
 

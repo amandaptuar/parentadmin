@@ -1,153 +1,190 @@
-import React, { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Bell, ShieldCheck, Battery, Wifi, WifiOff } from 'lucide-react';
-
-const childrenData = [
-  {
-    id: 1,
-    name: 'Emma',
-    photo: 'https://i.pravatar.cc/150?u=emma',
-    device: 'iPhone 13',
-    battery: 84,
-    status: 'online'
-  },
-  {
-    id: 2,
-    name: 'Noah',
-    photo: 'https://i.pravatar.cc/150?u=noah',
-    device: 'Galaxy S22',
-    battery: 12,
-    status: 'offline'
-  },
-  {
-    id: 3,
-    name: 'Sophia',
-    photo: 'https://i.pravatar.cc/150?u=sophia',
-    device: 'iPad Pro',
-    battery: 100,
-    status: 'online'
-  }
-];
+import { Bell, ShieldCheck, Battery, Wifi, WifiOff, Plus, RefreshCw } from 'lucide-react';
+import { getChildren, getUser, getMySubscription } from '../services/api';
+import { useChild } from '../context/ChildContext';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+  const { selectChild } = useChild();
+  const user = getUser();
+
+  const [children, setChildren]     = useState([]);
+  const [loading, setLoading]       = useState(true);
+  const [subscription, setSubscription] = useState(null);
+
   useEffect(() => {
-    // Re-initialize any global template scripts if needed
     if (window.UroraApp && typeof window.UroraApp.init === 'function') {
-      try {
-        window.UroraApp.init();
-      } catch (e) {
-        console.error("Dashboard init error:", e);
-      }
+      try { window.UroraApp.init(); } catch (e) { console.error(e); }
     }
+    fetchData();
   }, []);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [childData, subData] = await Promise.allSettled([
+        getChildren(),
+        getMySubscription(),
+      ]);
+      if (childData.status === 'fulfilled') {
+        const list = childData.value?.children || childData.value?.data || childData.value || [];
+        setChildren(Array.isArray(list) ? list : []);
+      }
+      if (subData.status === 'fulfilled') setSubscription(subData.value);
+    } catch (err) {
+      console.error('Dashboard fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleViewActivity = (child) => {
+    selectChild(child);
+    navigate('/dashboard/live-activity');
+  };
+
+  const getPlanLabel = () => {
+    if (!subscription) return 'Free Trial';
+    return subscription.plan_name || 'Active Plan';
+  };
 
   return (
     <div className="page-content-wrapper">
       <div className="container-fluid pt-4">
 
-        {/* Dashboard Top Section */}
+        {/* Header */}
         <div className="row mb-5 align-items-center">
           <div className="col-md-6">
             <div className="d-flex align-items-center gap-3">
-              <img src="https://i.pravatar.cc/150?u=parent" alt="Parent Profile" className="rounded-circle shadow-sm" width="60" height="60" />
+              <div className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold"
+                style={{ width: 60, height: 60, fontSize: 22, flexShrink: 0 }}>
+                {user?.name?.charAt(0)?.toUpperCase() || 'P'}
+              </div>
               <div>
-                <h4 className="page-title m-0">Welcome back, Sarah</h4>
-                <p className="text-muted m-0">You're monitoring 3 devices today.</p>
+                <h4 className="page-title m-0">Welcome back, {user?.name || 'Parent'}</h4>
+                <p className="text-muted m-0">
+                  {loading ? 'Loading...' : `You're monitoring ${children.length} device${children.length !== 1 ? 's' : ''} today.`}
+                </p>
               </div>
             </div>
           </div>
-          <div className="col-md-6 d-flex justify-content-md-end mt-3 mt-md-0 gap-3">
+          <div className="col-md-6 d-flex justify-content-md-end mt-3 mt-md-0 gap-3 align-items-center">
             <div className="d-flex align-items-center bg-white px-3 py-2 rounded-pill shadow-sm border border-success">
               <ShieldCheck className="text-success mr-2" size={18} />
-              <span className="font-weight-bold text-success" style={{ fontSize: '13px' }}>Premium Active</span>
+              <span className="font-weight-bold text-success" style={{ fontSize: '13px' }}>{getPlanLabel()}</span>
             </div>
+            <button className="btn btn-light rounded-circle shadow-sm p-2" onClick={fetchData} title="Refresh">
+              <RefreshCw size={18} className="text-dark" />
+            </button>
             <Link to="/dashboard/notifications">
-              <motion.button 
-                whileHover={{ scale: 1.05 }} 
-                whileTap={{ scale: 0.95 }} 
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 className="btn btn-light rounded-circle shadow-sm p-2 d-flex align-items-center justify-content-center"
                 style={{ width: '40px', height: '40px' }}
               >
-                <div className="position-relative">
-                  <Bell size={20} className="text-dark" />
-                  <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ right: '-5px', top: '-5px' }}>
-                    2
-                  </span>
-                </div>
+                <Bell size={20} className="text-dark" />
               </motion.button>
             </Link>
           </div>
         </div>
 
-        {/* Child Profiles Carousel */}
+        {/* Children Cards */}
         <div className="row mb-4">
           <div className="col-12">
             <h5 className="header-title mb-4">Monitored Devices</h5>
-            
-            {/* Horizontal Scroll Container */}
-            <div className="d-flex gap-4 overflow-auto pb-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-              
-              {childrenData.map((child, index) => (
-                <motion.div 
-                  key={child.id}
-                  initial={{ opacity: 0, x: 50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  whileHover={{ y: -8, boxShadow: '0 15px 30px rgba(0,0,0,0.1)' }}
-                  className="card border-0 flex-shrink-0"
-                  style={{ width: '280px', borderRadius: '16px', background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(10px)' }}
-                >
-                  <div className="card-body text-center position-relative">
-                    
-                    {/* Status Indicator Top Right */}
-                    <div className="position-absolute d-flex align-items-center gap-1 px-2 py-1 rounded-pill" 
-                         style={{ top: '15px', right: '15px', background: child.status === 'online' ? 'rgba(0, 150, 136, 0.1)' : 'rgba(153, 153, 153, 0.1)' }}>
-                      {child.status === 'online' ? (
-                        <>
-                          <Wifi size={12} className="text-success" />
-                          <small className="text-success font-weight-bold">Online</small>
-                        </>
-                      ) : (
-                        <>
-                          <WifiOff size={12} className="text-muted" />
-                          <small className="text-muted font-weight-bold">Offline</small>
-                        </>
-                      )}
-                    </div>
 
-                    <img src={child.photo} alt={child.name} className="rounded-circle shadow mt-3 mb-3" width="80" height="80" style={{ border: '3px solid white' }} />
-                    <h5 className="m-0 font-weight-bold">{child.name}</h5>
-                    <p className="text-muted mb-3"><small>{child.device}</small></p>
+            {loading ? (
+              <div className="text-center py-5 text-muted">
+                <div className="spinner-border spinner-border-sm text-primary me-2"></div>
+                Loading devices...
+              </div>
+            ) : (
+              <div className="d-flex gap-4 overflow-auto pb-4" style={{ scrollbarWidth: 'none' }}>
 
-                    <div className="d-flex justify-content-between align-items-center border-top pt-3 mt-3">
-                      <div className="d-flex align-items-center gap-2">
-                        <Battery size={16} className={child.battery > 20 ? 'text-success' : 'text-danger'} />
-                        <span className="font-weight-bold">{child.battery}%</span>
+                {children.map((child, index) => {
+                  const isOnline  = child.isOnline || child.liveStatus?.isOnline || false;
+                  const battery   = child.batteryLevel ?? child.batteryInfo?.level ?? child.liveStatus?.batteryInfo?.level ?? null;
+                  const deviceName = child.deviceName || child.deviceInfo?.model || 'Device';
+
+                  return (
+                    <motion.div
+                      key={child._id}
+                      initial={{ opacity: 0, x: 50 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      whileHover={{ y: -8, boxShadow: '0 15px 30px rgba(0,0,0,0.1)' }}
+                      className="card border-0 flex-shrink-0"
+                      style={{ width: '280px', borderRadius: '16px', background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(10px)' }}
+                    >
+                      <div className="card-body text-center position-relative">
+
+                        <div className="position-absolute d-flex align-items-center gap-1 px-2 py-1 rounded-pill"
+                          style={{ top: '15px', right: '15px', background: isOnline ? 'rgba(0,150,136,0.1)' : 'rgba(153,153,153,0.1)' }}>
+                          {isOnline ? (
+                            <><Wifi size={12} className="text-success" /><small className="text-success font-weight-bold">Online</small></>
+                          ) : (
+                            <><WifiOff size={12} className="text-muted" /><small className="text-muted font-weight-bold">Offline</small></>
+                          )}
+                        </div>
+
+                        <div className="rounded-circle bg-info text-white d-flex align-items-center justify-content-center fw-bold mx-auto mt-3 mb-3"
+                          style={{ width: 80, height: 80, fontSize: 28, border: '3px solid white' }}>
+                          {child.name?.charAt(0)?.toUpperCase() || '?'}
+                        </div>
+                        <h5 className="m-0 font-weight-bold">{child.name}</h5>
+                        <p className="text-muted mb-3"><small>{deviceName}</small></p>
+
+                        <div className="d-flex justify-content-between align-items-center border-top pt-3 mt-3">
+                          <div className="d-flex align-items-center gap-2">
+                            {battery !== null ? (
+                              <>
+                                <Battery size={16} className={battery > 20 ? 'text-success' : 'text-danger'} />
+                                <span className="font-weight-bold">{battery}%</span>
+                              </>
+                            ) : (
+                              <span className="text-muted" style={{ fontSize: 12 }}>—</span>
+                            )}
+                          </div>
+                          <button
+                            className="btn btn-sm btn-outline-primary rounded-pill px-3"
+                            onClick={() => handleViewActivity(child)}
+                          >
+                            View Activity
+                          </button>
+                        </div>
+
                       </div>
-                      <Link to="/dashboard/live-activity" className="btn btn-sm btn-outline-primary rounded-pill px-3">View Activity</Link>
-                    </div>
+                    </motion.div>
+                  );
+                })}
 
+                {children.length === 0 && (
+                  <div className="text-muted py-4">
+                    <p>No devices found. Link a child device through the Vigil app.</p>
+                  </div>
+                )}
+
+                {/* Add Device placeholder */}
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  className="card border-0 flex-shrink-0 d-flex justify-content-center align-items-center"
+                  style={{ width: '280px', borderRadius: '16px', background: 'rgba(255,255,255,0.5)', cursor: 'default' }}
+                >
+                  <div className="text-center text-muted p-4">
+                    <div className="rounded-circle bg-white shadow-sm d-flex justify-content-center align-items-center mx-auto mb-2"
+                      style={{ width: '50px', height: '50px' }}>
+                      <Plus size={24} className="text-primary" />
+                    </div>
+                    <h6 className="font-weight-bold mt-3">Add Device</h6>
+                    <small>Pair via the Vigil child app</small>
                   </div>
                 </motion.div>
-              ))}
 
-              {/* Add Device Card */}
-              <motion.div 
-                whileHover={{ scale: 1.02 }}
-                onClick={() => alert('Add device wizard will open here.')}
-                className="card border-0 flex-shrink-0 d-flex justify-content-center align-items-center"
-                style={{ width: '280px', borderRadius: '16px', background: 'rgba(255,255,255,0.5)', border: '2px dashed #ccc !important', cursor: 'pointer' }}
-              >
-                <div className="text-center text-muted">
-                  <div className="rounded-circle bg-white shadow-sm d-flex justify-content-center align-items-center mx-auto mb-2" style={{ width: '50px', height: '50px' }}>
-                    <i className="mdi mdi-plus text-primary" style={{ fontSize: '24px' }}></i>
-                  </div>
-                  <h6 className="font-weight-bold mt-3">Add Device</h6>
-                </div>
-              </motion.div>
-
-            </div>
+              </div>
+            )}
           </div>
         </div>
 
