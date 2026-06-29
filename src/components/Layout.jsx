@@ -3,6 +3,7 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import Footer from './Footer';
+import ToastContainer from './ToastContainer';
 
 export default function Layout() {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ export default function Layout() {
 
   return (
     <div id="wrapper">
+      <ToastContainer />
       <Sidebar onClose={toggleMobileMenu} />
       <div className="content-page">
         <div className="content">

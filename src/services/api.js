@@ -1,3 +1,5 @@
+import { toast } from '../utils/toast';
+
 const BASE_URL = import.meta.env.VITE_API_URL || 'https://160-153-179-249.sslip.io';
 
 export function getToken()    { return localStorage.getItem('vigil_token') || null; }
@@ -9,12 +11,23 @@ function authHeaders() {
   return t ? { Authorization: `Bearer ${t}` } : {};
 }
 
-async function request(path, options = {}) {
-  const headers = { 'Content-Type': 'application/json', ...authHeaders(), ...options.headers };
-  const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.message || `Error ${res.status}`);
-  return data;
+async function request(path, options = {}, silent = false) {
+  try {
+    const headers = { 'Content-Type': 'application/json', ...authHeaders(), ...options.headers };
+    const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const msg = data.message || data.msg || `Request failed (${res.status})`;
+      if (!silent) toast.error(msg);
+      throw new Error(msg);
+    }
+    return data;
+  } catch (err) {
+    if (err.name === 'TypeError' && !silent) {
+      toast.error('Network error — check your connection.');
+    }
+    throw err;
+  }
 }
 
 // ── Auth ─────────────────────────────────────────────────────────────────────

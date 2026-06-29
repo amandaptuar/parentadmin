@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Bell, ShieldCheck, Battery, Wifi, WifiOff, Plus, RefreshCw } from 'lucide-react';
+import { Bell, ShieldCheck, Battery, Wifi, WifiOff, Plus, RefreshCw, Smartphone, X } from 'lucide-react';
 import { getChildren, getUser, getMySubscription } from '../services/api';
 import { useChild } from '../context/ChildContext';
 
@@ -10,9 +10,10 @@ export default function Dashboard() {
   const { selectChild } = useChild();
   const user = getUser();
 
-  const [children, setChildren]     = useState([]);
-  const [loading, setLoading]       = useState(true);
+  const [children, setChildren]         = useState([]);
+  const [loading, setLoading]           = useState(true);
   const [subscription, setSubscription] = useState(null);
+  const [showAddDevice, setShowAddDevice] = useState(false);
 
   useEffect(() => {
     if (window.UroraApp && typeof window.UroraApp.init === 'function') {
@@ -167,18 +168,19 @@ export default function Dashboard() {
                   </div>
                 )}
 
-                {/* Add Device placeholder */}
+                {/* Add Device card */}
                 <motion.div
-                  whileHover={{ scale: 1.02 }}
+                  whileHover={{ scale: 1.02, boxShadow: '0 15px 30px rgba(0,0,0,0.1)' }}
+                  onClick={() => setShowAddDevice(true)}
                   className="card border-0 flex-shrink-0 d-flex justify-content-center align-items-center"
-                  style={{ width: '280px', borderRadius: '16px', background: 'rgba(255,255,255,0.5)', cursor: 'default' }}
+                  style={{ width: '280px', borderRadius: '16px', background: 'rgba(255,255,255,0.7)', cursor: 'pointer', border: '2px dashed #d0d7de' }}
                 >
                   <div className="text-center text-muted p-4">
                     <div className="rounded-circle bg-white shadow-sm d-flex justify-content-center align-items-center mx-auto mb-2"
                       style={{ width: '50px', height: '50px' }}>
                       <Plus size={24} className="text-primary" />
                     </div>
-                    <h6 className="font-weight-bold mt-3">Add Device</h6>
+                    <h6 className="font-weight-bold mt-3 text-primary">+ Add Device</h6>
                     <small>Pair via the Vigil child app</small>
                   </div>
                 </motion.div>
@@ -189,6 +191,52 @@ export default function Dashboard() {
         </div>
 
       </div>
+
+      {/* Add Device Modal */}
+      {showAddDevice && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1050, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+          onClick={() => setShowAddDevice(false)}>
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+            onClick={e => e.stopPropagation()}
+            style={{ background: '#fff', borderRadius: 16, width: '100%', maxWidth: 480, boxShadow: '0 20px 60px rgba(0,0,0,0.2)', overflow: 'hidden' }}>
+            <div style={{ background: 'linear-gradient(135deg, #3f51b5, #009688)', padding: '24px 24px 20px', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="d-flex align-items-center gap-3">
+                <Smartphone size={28} />
+                <div>
+                  <h5 className="m-0 font-weight-bold">Pair a Child Device</h5>
+                  <small className="opacity-75">Follow the steps below</small>
+                </div>
+              </div>
+              <button onClick={() => setShowAddDevice(false)} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <X size={18} />
+              </button>
+            </div>
+            <div style={{ padding: 24 }}>
+              {[
+                { step: 1, title: 'Download Vigil Child App',   desc: 'Install the Vigil Child app on the device you want to monitor (available on Android).' },
+                { step: 2, title: 'Open the App & Enter Email', desc: `On the child device, open the app and enter your parent email: ${user?.email || 'your registered email'}.` },
+                { step: 3, title: 'Approve via OTP',            desc: 'You will receive an OTP on your email. Enter it in the child app to complete pairing.' },
+                { step: 4, title: 'Done!',                      desc: 'The device will appear on your dashboard automatically once pairing is confirmed.' },
+              ].map(s => (
+                <div key={s.step} className="d-flex gap-3 mb-4">
+                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#3f51b5', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0, fontSize: 14 }}>
+                    {s.step}
+                  </div>
+                  <div>
+                    <h6 className="m-0 font-weight-bold">{s.title}</h6>
+                    <p className="m-0 text-muted" style={{ fontSize: 13 }}>{s.desc}</p>
+                  </div>
+                </div>
+              ))}
+              <button onClick={() => { setShowAddDevice(false); fetchData(); }}
+                className="btn btn-primary btn-block rounded-pill font-weight-bold py-2">
+                Done — Refresh Dashboard
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
     </div>
   );
 }

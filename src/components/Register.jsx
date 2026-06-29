@@ -31,8 +31,19 @@ export default function Register() {
     setError('');
     setLoading(true);
     try {
-      await register({ name: form.name, email: form.email, password: form.password });
-      navigate('/login');
+      const data = await register({ name: form.name, email: form.email, password: form.password });
+      if (data.token) {
+        localStorage.setItem('vigil_token', data.token);
+        localStorage.setItem('vigil_user', JSON.stringify({
+          _id:   data.userId,
+          id:    data.userId,
+          name:  data.userName,
+          email: data.userEmail,
+        }));
+        navigate('/');
+      } else {
+        navigate('/login');
+      }
     } catch (err) {
       setError(err.message || 'Registration failed. Please try again.');
     } finally {

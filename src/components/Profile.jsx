@@ -62,6 +62,7 @@ export default function Profile() {
     setError('');
     try {
       await updateProfile(form);
+      setProfile(prev => ({ ...prev, ...form }));
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
