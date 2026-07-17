@@ -123,6 +123,17 @@ export const updateDataAccess = (childId, payload) =>
 export const updateBatteryOptimization = (childId, status) =>
   request(`/api/children/${childId}/battery-optimization-status`, { method: 'PUT', body: JSON.stringify({ status }) });
 
+// ─── Subscriptions & Payments ─────────────────────────────────────────────────
+
+export const getPlans = () =>
+  request('/api/subscriptions/plans');
+
+export const getMySubscription = () =>
+  request('/api/subscriptions/my');
+
+export const createCheckoutSession = (payload) =>
+  request('/api/payments/initiate', { method: 'POST', body: JSON.stringify(payload) });
+
 // ─── Pairing ─────────────────────────────────────────────────────────────────
 
 export const generatePairingCode = (childId) =>

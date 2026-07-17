@@ -1,13 +1,23 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { 
-  User, Mail, Phone, MapPin, Globe, Edit, 
-  Settings, Activity, ShieldCheck, Camera, CheckCircle
+import React, { useState, useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  User, Mail, Phone, MapPin, Globe, Edit,
+  Settings, Activity, ShieldCheck, Camera, CheckCircle, X, Loader2
 } from 'lucide-react';
+import { getPlans, getMySubscription, createCheckoutSession } from '../services/api';
 
 export default function Profile() {
   const [activeTab, setActiveTab] = useState('about');
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const [subscription, setSubscription] = useState(null);
+  const [subLoading, setSubLoading] = useState(true);
+  const [plans, setPlans] = useState([]);
+  const [plansLoading, setPlansLoading] = useState(false);
+  const [showPlansModal, setShowPlansModal] = useState(false);
+  const [checkoutPlanId, setCheckoutPlanId] = useState(null);
+  const [paymentBanner, setPaymentBanner] = useState(null);
 
   const tabs = [
     { id: 'about', label: 'Personal Info', icon: User },
@@ -15,9 +25,82 @@ export default function Profile() {
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
+  const loadSubscription = () => {
+    setSubLoading(true);
+    getMySubscription()
+      .then(setSubscription)
+      .catch(() => setSubscription(null))
+      .finally(() => setSubLoading(false));
+  };
+
+  useEffect(() => {
+    loadSubscription();
+
+    const paymentStatus = searchParams.get('payment');
+    if (paymentStatus === 'success') {
+      setPaymentBanner({ type: 'success', text: 'Payment successful! Your subscription is now active.' });
+      loadSubscription();
+      setSearchParams({}, { replace: true });
+    } else if (paymentStatus === 'cancel') {
+      setPaymentBanner({ type: 'cancel', text: 'Checkout was canceled — no charge was made.' });
+      setSearchParams({}, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const openPlansModal = () => {
+    setShowPlansModal(true);
+    if (plans.length === 0) {
+      setPlansLoading(true);
+      getPlans()
+        .then((res) => setPlans(res.plans || []))
+        .catch(() => setPlans([]))
+        .finally(() => setPlansLoading(false));
+    }
+  };
+
+  const startCheckout = async (plan) => {
+    setCheckoutPlanId(plan._id);
+    try {
+      let user = {};
+      try { user = JSON.parse(localStorage.getItem('vigil_parent_user') || '{}'); } catch { /* ignore */ }
+      const email = user.userEmail || user.email;
+      const name = user.userName || user.name;
+
+      const res = await createCheckoutSession({
+        planId: plan._id,
+        email,
+        name,
+        success_url: `${window.location.origin}/profile?payment=success`,
+        cancel_url: `${window.location.origin}/profile?payment=cancel`,
+      });
+
+      if (res.url) {
+        window.location.href = res.url;
+      } else {
+        throw new Error('No checkout URL returned');
+      }
+    } catch (err) {
+      setPaymentBanner({ type: 'cancel', text: err.message || 'Could not start checkout. Please try again.' });
+      setCheckoutPlanId(null);
+    }
+  };
+
   return (
     <div className="page-content-wrapper">
       <div className="container-fluid pt-4">
+
+        {paymentBanner && (
+          <div
+            className={`alert ${paymentBanner.type === 'success' ? 'alert-success' : 'alert-warning'} d-flex align-items-center justify-content-between`}
+            role="alert"
+          >
+            <span>{paymentBanner.text}</span>
+            <button type="button" className="btn btn-sm btn-link text-dark" onClick={() => setPaymentBanner(null)}>
+              <X size={16} />
+            </button>
+          </div>
+        )}
 
         {/* Profile Header Card */}
         <motion.div 
@@ -110,7 +193,7 @@ export default function Profile() {
             </motion.div>
 
             {/* Plan Info */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
@@ -121,9 +204,26 @@ export default function Profile() {
                 <div className="rounded-circle bg-white d-flex align-items-center justify-content-center mx-auto mb-3" style={{ width: '60px', height: '60px' }}>
                   <ShieldCheck size={30} className="text-success" />
                 </div>
-                <h5 className="font-weight-bold text-white mb-1">Urora Guardian Premium</h5>
-                <p className="text-white-50 mb-3">Monitoring 3 devices</p>
-                <button onClick={() => alert('Subscription management will be available soon.')} className="btn btn-light rounded-pill btn-sm px-4 font-weight-bold">Manage Plan</button>
+                {subLoading ? (
+                  <p className="text-white-50 mb-3">Loading plan…</p>
+                ) : subscription && subscription.hasSubscription ? (
+                  <>
+                    <h5 className="font-weight-bold text-white mb-1">{subscription.subscription.plan_name}</h5>
+                    <p className="text-white-50 mb-3">
+                      {subscription.inTrial
+                        ? `Trial — ${subscription.trialDaysRemaining} day(s) left`
+                        : `${subscription.daysRemaining} day(s) remaining`}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h5 className="font-weight-bold text-white mb-1">No Active Plan</h5>
+                    <p className="text-white-50 mb-3">Choose a plan to get started</p>
+                  </>
+                )}
+                <button onClick={openPlansModal} className="btn btn-light rounded-pill btn-sm px-4 font-weight-bold">
+                  {subscription && subscription.hasSubscription ? 'Manage Plan' : 'Choose a Plan'}
+                </button>
               </div>
             </motion.div>
 
@@ -275,6 +375,82 @@ export default function Profile() {
 
         </div>
       </div>
+
+      {/* Plan Selection Modal */}
+      <AnimatePresence>
+        {showPlansModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="d-flex align-items-center justify-content-center"
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1050 }}
+            onClick={() => setShowPlansModal(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              className="card border-0 rounded-lg shadow"
+              style={{ width: '90%', maxWidth: '900px', maxHeight: '85vh', overflowY: 'auto' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="card-body p-4 p-md-5">
+                <div className="d-flex align-items-center justify-content-between mb-4">
+                  <h4 className="font-weight-bold m-0">Choose a Plan</h4>
+                  <button className="btn btn-light rounded-circle p-2" onClick={() => setShowPlansModal(false)}>
+                    <X size={18} />
+                  </button>
+                </div>
+
+                {plansLoading ? (
+                  <div className="text-center py-5 text-muted">Loading plans…</div>
+                ) : plans.length === 0 ? (
+                  <div className="text-center py-5 text-muted">No plans available right now.</div>
+                ) : (
+                  <div className="row">
+                    {plans.map((plan) => {
+                      const isCurrent = subscription && subscription.hasSubscription &&
+                        subscription.subscription.plan_id === plan._id;
+                      const isCheckingOut = checkoutPlanId === plan._id;
+                      return (
+                        <div key={plan._id} className="col-md-4 mb-4">
+                          <div className="card h-100 border shadow-sm rounded-lg">
+                            <div className="card-body d-flex flex-column p-4">
+                              <h5 className="font-weight-bold mb-1">{plan.name}</h5>
+                              <p className="text-muted small mb-3">{plan.description}</p>
+                              <h3 className="font-weight-bold mb-1">
+                                {plan.currency} {plan.price}
+                                <span className="text-muted small font-weight-normal"> / {plan.duration_days}d</span>
+                              </h3>
+                              <p className="text-muted small mb-4">Up to {plan.max_children} device(s)</p>
+                              <button
+                                className="btn btn-primary rounded-pill mt-auto font-weight-bold"
+                                disabled={isCurrent || isCheckingOut}
+                                onClick={() => startCheckout(plan)}
+                              >
+                                {isCurrent ? (
+                                  'Current Plan'
+                                ) : isCheckingOut ? (
+                                  <span className="d-flex align-items-center justify-content-center gap-2">
+                                    <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Redirecting…
+                                  </span>
+                                ) : (
+                                  'Subscribe'
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,0 +1,9 @@
+# SPA fallback for the Parent Web served at vigil-1.com/parent
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /parent/
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /parent/index.html [L]
+</IfModule>
