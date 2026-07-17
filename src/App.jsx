@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ChildProvider } from './context/ChildContext';
 import Preloader from './components/Preloader';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
@@ -14,12 +15,10 @@ import {
   ScreenTime, Reports, NotificationsCenter, HelpCenter
 } from './pages/parenting';
 
-// Guard: only allow access to dashboard/profile if logged in
+// Guard: only allow access if a valid JWT token exists
 function ProtectedRoute({ children }) {
-  const isLoggedIn = localStorage.getItem('urora_logged_in') === 'true';
-  if (!isLoggedIn) {
-    return <Navigate to="/login" replace />;
-  }
+  const isLoggedIn = !!localStorage.getItem('vigil_token');
+  if (!isLoggedIn) return <Navigate to="/login" replace />;
   return children;
 }
 
@@ -38,7 +37,12 @@ function App() {
   }, []);
 
   return (
+<<<<<<< HEAD
     <Router basename="/parent">
+=======
+    <ChildProvider>
+    <Router>
+>>>>>>> f24dd3eebaefecadfd39370506218c4d6b64f04f
       <Preloader />
       <Routes>
         {/* Public pages - always accessible */}
@@ -72,6 +76,7 @@ function App() {
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
+    </ChildProvider>
   );
 }
 
