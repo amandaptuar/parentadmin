@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-import React, { useEffect, useState } from 'react';
-=======
 import React, { useState, useEffect } from 'react';
->>>>>>> f24dd3eebaefecadfd39370506218c4d6b64f04f
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { login } from '../services/api';
@@ -18,17 +14,10 @@ const inputStyle = {
 
 export default function Login() {
   const navigate = useNavigate();
-<<<<<<< HEAD
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-=======
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState('');
->>>>>>> f24dd3eebaefecadfd39370506218c4d6b64f04f
 
   useEffect(() => {
     document.body.classList.remove('fixed-left');
@@ -46,11 +35,6 @@ export default function Login() {
     setLoading(true);
     try {
       const data = await login(email, password);
-<<<<<<< HEAD
-      localStorage.setItem('vigil_parent_token', data.token);
-      localStorage.setItem('vigil_parent_user', JSON.stringify(data.user || data));
-      localStorage.setItem('urora_logged_in', 'true');
-=======
       // Backend returns { token, user } or { accessToken, user }
       const token = data.token || data.accessToken;
       const user  = data.user || data.data;
@@ -58,7 +42,6 @@ export default function Login() {
       localStorage.setItem('vigil_token', token);
       localStorage.setItem('vigil_user',  JSON.stringify(user || {}));
       if (data.refreshToken) localStorage.setItem('vigil_refresh_token', data.refreshToken);
->>>>>>> f24dd3eebaefecadfd39370506218c4d6b64f04f
       navigate('/');
     } catch (err) {
       setError(err.message || 'Login failed. Please check your credentials.');
@@ -119,14 +102,6 @@ export default function Login() {
                         <h5 className="mt-3 text-muted font-weight-normal">Sign in to continue</h5>
                       </div>
 
-<<<<<<< HEAD
-                          {error && (
-                            <div className="alert alert-danger py-2 mb-3" style={{ borderRadius: '8px', fontSize: '14px' }}>
-                              {error}
-                            </div>
-                          )}
-
-=======
                       <div className="px-3 pb-3">
                         {error && (
                           <div className="alert alert-danger py-2 mb-3" style={{ borderRadius: '8px', fontSize: '13px' }}>
@@ -135,7 +110,6 @@ export default function Login() {
                         )}
 
                         <form className="form-horizontal mb-0" onSubmit={handleLogin}>
->>>>>>> f24dd3eebaefecadfd39370506218c4d6b64f04f
                           <div className="form-group row">
                             <div className="col-12">
                               <input
@@ -143,15 +117,9 @@ export default function Login() {
                                 style={inputStyle}
                                 type="email"
                                 required
-<<<<<<< HEAD
-                                placeholder="Email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-=======
                                 placeholder="Email or Mobile Number"
                                 value={email}
                                 onChange={e => setEmail(e.target.value)}
->>>>>>> f24dd3eebaefecadfd39370506218c4d6b64f04f
                               />
                             </div>
                           </div>
@@ -165,11 +133,7 @@ export default function Login() {
                                 required
                                 placeholder="Password"
                                 value={password}
-<<<<<<< HEAD
-                                onChange={(e) => setPassword(e.target.value)}
-=======
                                 onChange={e => setPassword(e.target.value)}
->>>>>>> f24dd3eebaefecadfd39370506218c4d6b64f04f
                               />
                             </div>
                           </div>
@@ -185,31 +149,6 @@ export default function Login() {
                                 style={{ borderRadius: '8px', padding: '10px' }}
                               >
                                 {loading ? 'Signing in...' : 'Log In'}
-<<<<<<< HEAD
-                              </motion.button>
-                            </div>
-                          </div>
-
-                          <div className="mt-4 text-center">
-                            <p className="text-muted mb-3"><small>Or sign in with</small></p>
-                            <div className="d-flex justify-content-center gap-3">
-                              <motion.button 
-                                whileHover={{ y: -2 }}
-                                type="button" 
-                                className="btn btn-light mx-1" 
-                                style={{ borderRadius: '8px', border: '1px solid #ddd', padding: '8px 16px', background: 'white' }}
-                              >
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" height="18" />
-                              </motion.button>
-                              <motion.button 
-                                whileHover={{ y: -2 }}
-                                type="button" 
-                                className="btn btn-dark mx-1" 
-                                style={{ borderRadius: '8px', padding: '8px 16px' }}
-                              >
-                                <i className="mdi mdi-apple" style={{ fontSize: '18px' }}></i>
-=======
->>>>>>> f24dd3eebaefecadfd39370506218c4d6b64f04f
                               </motion.button>
                             </div>
                           </div>

@@ -37,12 +37,8 @@ function App() {
   }, []);
 
   return (
-<<<<<<< HEAD
-    <Router basename="/parent">
-=======
     <ChildProvider>
-    <Router>
->>>>>>> f24dd3eebaefecadfd39370506218c4d6b64f04f
+    <Router basename="/parent">
       <Preloader />
       <Routes>
         {/* Public pages - always accessible */}

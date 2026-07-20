@@ -1,34 +1,13 @@
 import React, { useState, useEffect } from 'react';
-<<<<<<< HEAD
-import { Link, useSearchParams } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  User, Mail, Phone, MapPin, Globe, Edit,
-  Settings, Activity, ShieldCheck, Camera, CheckCircle, X, Loader2
-} from 'lucide-react';
-import { getPlans, getMySubscription, createCheckoutSession } from '../services/api';
-=======
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { User, Mail, Phone, Edit, Settings, Activity, ShieldCheck, CheckCircle } from 'lucide-react';
 import { getProfile, updateProfile, getChildren, getUser } from '../services/api';
 import { useChild } from '../context/ChildContext';
->>>>>>> f24dd3eebaefecadfd39370506218c4d6b64f04f
 
 export default function Profile() {
   const { selectChild } = useChild();
   const [activeTab, setActiveTab] = useState('about');
-<<<<<<< HEAD
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  const [subscription, setSubscription] = useState(null);
-  const [subLoading, setSubLoading] = useState(true);
-  const [plans, setPlans] = useState([]);
-  const [plansLoading, setPlansLoading] = useState(false);
-  const [showPlansModal, setShowPlansModal] = useState(false);
-  const [checkoutPlanId, setCheckoutPlanId] = useState(null);
-  const [paymentBanner, setPaymentBanner] = useState(null);
-=======
   const [profile, setProfile]     = useState(getUser() || {});
   const [children, setChildren]   = useState([]);
   const [loading, setLoading]     = useState(true);
@@ -92,7 +71,6 @@ export default function Profile() {
       setSaving(false);
     }
   };
->>>>>>> f24dd3eebaefecadfd39370506218c4d6b64f04f
 
   const tabs = [
     { id: 'about',    label: 'Personal Info',     icon: User     },
@@ -165,29 +143,8 @@ export default function Profile() {
     <div className="page-content-wrapper">
       <div className="container-fluid pt-4">
 
-<<<<<<< HEAD
-        {paymentBanner && (
-          <div
-            className={`alert ${paymentBanner.type === 'success' ? 'alert-success' : 'alert-warning'} d-flex align-items-center justify-content-between`}
-            role="alert"
-          >
-            <span>{paymentBanner.text}</span>
-            <button type="button" className="btn btn-sm btn-link text-dark" onClick={() => setPaymentBanner(null)}>
-              <X size={16} />
-            </button>
-          </div>
-        )}
-
-        {/* Profile Header Card */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="row mb-4"
-        >
-=======
         {/* Header card */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="row mb-4">
->>>>>>> f24dd3eebaefecadfd39370506218c4d6b64f04f
           <div className="col-12">
             <div className="card shadow-sm border-0 rounded-lg overflow-hidden">
               <div style={{ height: 160, background: 'linear-gradient(135deg, #3f51b5 0%, #009688 100%)' }} />
@@ -243,15 +200,7 @@ export default function Profile() {
               </div>
             </motion.div>
 
-<<<<<<< HEAD
-            {/* Plan Info */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-=======
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}
->>>>>>> f24dd3eebaefecadfd39370506218c4d6b64f04f
               className="card shadow-sm border-0 rounded-lg"
               style={{ background: 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)', color: 'white' }}>
               <div className="card-body p-4 text-center">
@@ -259,31 +208,8 @@ export default function Profile() {
                   style={{ width: 56, height: 56 }}>
                   <ShieldCheck size={28} className="text-success" />
                 </div>
-<<<<<<< HEAD
-                {subLoading ? (
-                  <p className="text-white-50 mb-3">Loading plan…</p>
-                ) : subscription && subscription.hasSubscription ? (
-                  <>
-                    <h5 className="font-weight-bold text-white mb-1">{subscription.subscription.plan_name}</h5>
-                    <p className="text-white-50 mb-3">
-                      {subscription.inTrial
-                        ? `Trial — ${subscription.trialDaysRemaining} day(s) left`
-                        : `${subscription.daysRemaining} day(s) remaining`}
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <h5 className="font-weight-bold text-white mb-1">No Active Plan</h5>
-                    <p className="text-white-50 mb-3">Choose a plan to get started</p>
-                  </>
-                )}
-                <button onClick={openPlansModal} className="btn btn-light rounded-pill btn-sm px-4 font-weight-bold">
-                  {subscription && subscription.hasSubscription ? 'Manage Plan' : 'Choose a Plan'}
-                </button>
-=======
                 <h5 className="font-weight-bold text-white mb-1">Vigil Guardian</h5>
                 <p className="text-white-50 mb-3">Monitoring {children.length} device{children.length !== 1 ? 's' : ''}</p>
->>>>>>> f24dd3eebaefecadfd39370506218c4d6b64f04f
               </div>
             </motion.div>
           </div>
