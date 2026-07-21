@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Bell, ShieldCheck, Battery, Wifi, WifiOff, Plus, RefreshCw, Smartphone, X } from 'lucide-react';
-import { getChildren, getUser, getMySubscription } from '../services/api';
+import { Bell, ShieldCheck, Battery, Wifi, WifiOff, Plus, RefreshCw, Smartphone, X, AlertTriangle } from 'lucide-react';
+import { getChildren, getUser, getMySubscription, getDashboardSummary } from '../services/api';
 import { useChild } from '../context/ChildContext';
 
 export default function Dashboard() {
@@ -13,6 +13,7 @@ export default function Dashboard() {
   const [children, setChildren]         = useState([]);
   const [loading, setLoading]           = useState(true);
   const [subscription, setSubscription] = useState(null);
+  const [summary, setSummary]           = useState({ deviceCount: 0, onlineCount: 0, alertsToday: 0 });
   const [showAddDevice, setShowAddDevice] = useState(false);
 
   useEffect(() => {
@@ -25,15 +26,17 @@ export default function Dashboard() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [childData, subData] = await Promise.allSettled([
+      const [childData, subData, summaryData] = await Promise.allSettled([
         getChildren(),
         getMySubscription(),
+        getDashboardSummary(),
       ]);
       if (childData.status === 'fulfilled') {
         const list = childData.value?.children || childData.value?.data || childData.value || [];
         setChildren(Array.isArray(list) ? list : []);
       }
       if (subData.status === 'fulfilled') setSubscription(subData.value);
+      if (summaryData.status === 'fulfilled') setSummary(summaryData.value);
     } catch (err) {
       console.error('Dashboard fetch error:', err);
     } finally {
@@ -89,6 +92,49 @@ export default function Dashboard() {
                 <Bell size={20} className="text-dark" />
               </motion.button>
             </Link>
+          </div>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="row mb-4 g-3">
+          <div className="col-md-4">
+            <div className="card border-0 shadow-sm rounded-lg h-100">
+              <div className="card-body d-flex align-items-center gap-3">
+                <div className="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style={{ width: 44, height: 44 }}>
+                  <Smartphone size={20} className="text-primary" />
+                </div>
+                <div>
+                  <p className="text-muted small m-0">Devices</p>
+                  <h5 className="font-weight-bold m-0">{loading ? '—' : summary.deviceCount}</h5>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="col-md-4">
+            <div className="card border-0 shadow-sm rounded-lg h-100">
+              <div className="card-body d-flex align-items-center gap-3">
+                <div className="rounded-circle bg-success bg-opacity-10 d-flex align-items-center justify-content-center" style={{ width: 44, height: 44 }}>
+                  <Wifi size={20} className="text-success" />
+                </div>
+                <div>
+                  <p className="text-muted small m-0">Online Now</p>
+                  <h5 className="font-weight-bold m-0">{loading ? '—' : `${summary.onlineCount}/${summary.deviceCount}`}</h5>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="col-md-4">
+            <div className="card border-0 shadow-sm rounded-lg h-100">
+              <div className="card-body d-flex align-items-center gap-3">
+                <div className="rounded-circle bg-warning bg-opacity-10 d-flex align-items-center justify-content-center" style={{ width: 44, height: 44 }}>
+                  <AlertTriangle size={20} className="text-warning" />
+                </div>
+                <div>
+                  <p className="text-muted small m-0">Alerts Today</p>
+                  <h5 className="font-weight-bold m-0">{loading ? '—' : summary.alertsToday}</h5>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 

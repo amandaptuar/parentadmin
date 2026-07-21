@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { User, Mail, Phone, Edit, Settings, Activity, ShieldCheck, CheckCircle } from 'lucide-react';
-import { getProfile, updateProfile, getChildren, getUser } from '../services/api';
+import { Link, useSearchParams } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { User, Mail, Phone, Edit, Settings, Activity, ShieldCheck, CheckCircle, X, Loader2, Crown } from 'lucide-react';
+import {
+  getProfile, updateProfile, getChildren, getUser,
+  getMySubscription, getPlans, createCheckoutSession,
+} from '../services/api';
 import { useChild } from '../context/ChildContext';
 
 export default function Profile() {
   const { selectChild } = useChild();
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const [activeTab, setActiveTab] = useState('about');
   const [profile, setProfile]     = useState(getUser() || {});
   const [children, setChildren]   = useState([]);
@@ -23,6 +28,15 @@ export default function Profile() {
     country:     '',
     postal_code: '',
   });
+
+  // ── Subscription / plan state ────────────────────────────────────────────
+  const [subscription, setSubscription]   = useState(null);
+  const [subLoading, setSubLoading]       = useState(true);
+  const [paymentBanner, setPaymentBanner] = useState(null);
+  const [plans, setPlans]                 = useState([]);
+  const [plansLoading, setPlansLoading]   = useState(false);
+  const [showPlansModal, setShowPlansModal] = useState(false);
+  const [checkoutPlanId, setCheckoutPlanId] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -56,6 +70,63 @@ export default function Profile() {
     })();
   }, []);
 
+  const loadSubscription = () => {
+    setSubLoading(true);
+    getMySubscription()
+      .then(setSubscription)
+      .catch(() => setSubscription(null))
+      .finally(() => setSubLoading(false));
+  };
+
+  useEffect(() => {
+    loadSubscription();
+
+    const paymentStatus = searchParams.get('payment') || searchParams.get('upgrade');
+    if (paymentStatus === 'success') {
+      setPaymentBanner({ type: 'success', text: 'Payment successful! Your subscription is now active.' });
+      loadSubscription();
+      setSearchParams({}, { replace: true });
+    } else if (paymentStatus === 'cancel') {
+      setPaymentBanner({ type: 'cancel', text: 'Checkout was canceled — no charge was made.' });
+      setSearchParams({}, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const openPlansModal = () => {
+    setShowPlansModal(true);
+    if (plans.length === 0) {
+      setPlansLoading(true);
+      getPlans()
+        .then((res) => setPlans(Array.isArray(res) ? res : res.plans || res.data || []))
+        .catch(() => setPlans([]))
+        .finally(() => setPlansLoading(false));
+    }
+  };
+
+  const startCheckout = async (plan) => {
+    setCheckoutPlanId(plan._id);
+    try {
+      const u = getUser() || {};
+      const res = await createCheckoutSession({
+        planId: plan._id,
+        email: u.email,
+        name: u.name,
+        success_url: `${window.location.origin}${window.location.pathname}?payment=success`,
+        cancel_url: `${window.location.origin}${window.location.pathname}?payment=cancel`,
+      });
+
+      if (res.url) {
+        window.location.href = res.url;
+      } else {
+        throw new Error('No checkout URL returned');
+      }
+    } catch (err) {
+      setPaymentBanner({ type: 'cancel', text: err.message || 'Could not start checkout. Please try again.' });
+      setCheckoutPlanId(null);
+    }
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -78,70 +149,18 @@ export default function Profile() {
     { id: 'settings', label: 'Edit Profile',      icon: Settings },
   ];
 
-  const loadSubscription = () => {
-    setSubLoading(true);
-    getMySubscription()
-      .then(setSubscription)
-      .catch(() => setSubscription(null))
-      .finally(() => setSubLoading(false));
-  };
-
-  useEffect(() => {
-    loadSubscription();
-
-    const paymentStatus = searchParams.get('payment');
-    if (paymentStatus === 'success') {
-      setPaymentBanner({ type: 'success', text: 'Payment successful! Your subscription is now active.' });
-      loadSubscription();
-      setSearchParams({}, { replace: true });
-    } else if (paymentStatus === 'cancel') {
-      setPaymentBanner({ type: 'cancel', text: 'Checkout was canceled — no charge was made.' });
-      setSearchParams({}, { replace: true });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const openPlansModal = () => {
-    setShowPlansModal(true);
-    if (plans.length === 0) {
-      setPlansLoading(true);
-      getPlans()
-        .then((res) => setPlans(res.plans || []))
-        .catch(() => setPlans([]))
-        .finally(() => setPlansLoading(false));
-    }
-  };
-
-  const startCheckout = async (plan) => {
-    setCheckoutPlanId(plan._id);
-    try {
-      let user = {};
-      try { user = JSON.parse(localStorage.getItem('vigil_parent_user') || '{}'); } catch { /* ignore */ }
-      const email = user.userEmail || user.email;
-      const name = user.userName || user.name;
-
-      const res = await createCheckoutSession({
-        planId: plan._id,
-        email,
-        name,
-        success_url: `${window.location.origin}/profile?payment=success`,
-        cancel_url: `${window.location.origin}/profile?payment=cancel`,
-      });
-
-      if (res.url) {
-        window.location.href = res.url;
-      } else {
-        throw new Error('No checkout URL returned');
-      }
-    } catch (err) {
-      setPaymentBanner({ type: 'cancel', text: err.message || 'Could not start checkout. Please try again.' });
-      setCheckoutPlanId(null);
-    }
-  };
+  const planName = subLoading ? '…' : (subscription?.subscription?.plan_name || subscription?.plan_name || 'Free Trial');
 
   return (
     <div className="page-content-wrapper">
       <div className="container-fluid pt-4">
+
+        {paymentBanner && (
+          <div className={`alert ${paymentBanner.type === 'success' ? 'alert-success' : 'alert-warning'} rounded-lg d-flex align-items-center justify-content-between`}>
+            <span>{paymentBanner.text}</span>
+            <button className="btn btn-sm btn-light" onClick={() => setPaymentBanner(null)}>Dismiss</button>
+          </div>
+        )}
 
         {/* Header card */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="row mb-4">
@@ -161,7 +180,11 @@ export default function Profile() {
                     </h3>
                     <p className="text-muted m-0 mt-1">{profile.email || '—'}</p>
                   </div>
-                  <div>
+                  <div className="d-flex gap-2">
+                    <button onClick={openPlansModal}
+                      className="btn btn-outline-primary rounded-pill px-4 shadow-sm font-weight-bold d-flex align-items-center gap-2">
+                      <Crown size={15} /> {planName} · Change Plan
+                    </button>
                     <button onClick={() => setActiveTab('settings')}
                       className="btn btn-primary rounded-pill px-4 shadow-sm font-weight-bold d-flex align-items-center gap-2">
                       <Edit size={15} /> Edit Profile
@@ -328,6 +351,7 @@ export default function Profile() {
                       <div className="mb-3">
                         <label className="text-muted font-weight-bold small">Email Address</label>
                         <input type="email" className="form-control bg-light border-0" value={profile.email || ''} disabled />
+                        <small className="text-muted">Email is your login ID and can't be changed here. Contact support if you need to update it.</small>
                       </div>
                       <div className="mb-3">
                         <label className="text-muted font-weight-bold small">Address</label>
@@ -402,8 +426,8 @@ export default function Profile() {
                 ) : (
                   <div className="row">
                     {plans.map((plan) => {
-                      const isCurrent = subscription && subscription.hasSubscription &&
-                        subscription.subscription.plan_id === plan._id;
+                      const isCurrent = subscription?.subscription?.plan_id === plan._id ||
+                        subscription?.hasSubscription === false ? false : subscription?.subscription?.plan_id === plan._id;
                       const isCheckingOut = checkoutPlanId === plan._id;
                       return (
                         <div key={plan._id} className="col-md-4 mb-4">

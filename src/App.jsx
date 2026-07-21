@@ -7,6 +7,7 @@ import Dashboard from './components/Dashboard';
 import Profile from './components/Profile';
 import Login from './components/Login';
 import Register from './components/Register';
+import ForgotPassword from './components/ForgotPassword';
 
 // Parenting Imports
 import {
@@ -19,6 +20,14 @@ import {
 function ProtectedRoute({ children }) {
   const isLoggedIn = !!localStorage.getItem('vigil_token');
   if (!isLoggedIn) return <Navigate to="/login" replace />;
+  return children;
+}
+
+// Guard: logged-in users shouldn't be able to open login/register/forgot-password
+// (Vigil_025 — previously these pages stayed accessible even with an active session).
+function GuestRoute({ children }) {
+  const isLoggedIn = !!localStorage.getItem('vigil_token');
+  if (isLoggedIn) return <Navigate to="/" replace />;
   return children;
 }
 
@@ -36,14 +45,29 @@ function App() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Vigil_015 — after logout, the browser's back button could restore the
+  // dashboard from bfcache (in-memory snapshot) even though localStorage was
+  // already cleared. `pageshow` fires on that restore; if there's no token
+  // anymore, force a real reload so the router re-evaluates ProtectedRoute.
+  useEffect(() => {
+    const handlePageShow = (event) => {
+      if (event.persisted && !localStorage.getItem('vigil_token')) {
+        window.location.reload();
+      }
+    };
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
+  }, []);
+
   return (
     <ChildProvider>
     <Router basename="/parent">
       <Preloader />
       <Routes>
-        {/* Public pages - always accessible */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        {/* Guest-only pages — redirect away if already logged in (Vigil_025) */}
+        <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
+        <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
+        <Route path="/forgot-password" element={<GuestRoute><ForgotPassword /></GuestRoute>} />
 
         {/* Protected dashboard layout */}
         <Route element={

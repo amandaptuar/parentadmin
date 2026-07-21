@@ -147,7 +147,7 @@ export default function Register() {
                               <div className="custom-control custom-checkbox">
                                 <input type="checkbox" className="custom-control-input" id="customCheck1" required />
                                 <label className="custom-control-label font-weight-normal" htmlFor="customCheck1">
-                                  I accept <a href="#" className="text-primary font-weight-bold">Terms and Conditions</a>
+                                  I accept <a href="https://vigil-1.com/terms-and-conditions" target="_blank" rel="noopener noreferrer" className="text-primary font-weight-bold">Terms and Conditions</a>
                                 </label>
                               </div>
                             </div>

@@ -6,6 +6,13 @@ export function getToken()    { return localStorage.getItem('vigil_token') || nu
 export function getUser()     { try { return JSON.parse(localStorage.getItem('vigil_user') || 'null'); } catch { return null; } }
 export function getParentId() { const u = getUser(); return u?._id || u?.id || null; }
 
+export function logout() {
+  localStorage.removeItem('vigil_token');
+  localStorage.removeItem('vigil_user');
+  localStorage.removeItem('vigil_refresh_token');
+  localStorage.removeItem('vigil_selected_child');
+}
+
 function authHeaders() {
   const t = getToken();
   return t ? { Authorization: `Bearer ${t}` } : {};
@@ -90,6 +97,13 @@ export const toggleGeoZone = (id) => request(`/api/geozones/${id}/toggle`, { met
 export const getMySubscription = () => request('/api/subscriptions/my');
 
 export const getPlans = () => request('/api/subscriptions/plans');
+
+export const createCheckoutSession = (payload) =>
+  request('/api/payments/initiate', { method: 'POST', body: JSON.stringify(payload) });
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+
+export const getDashboardSummary = () => request('/api/parent-data/dashboard-summary');
 
 // ── Parent-facing monitoring data ─────────────────────────────────────────────
 

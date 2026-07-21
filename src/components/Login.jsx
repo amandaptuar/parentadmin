@@ -138,6 +138,14 @@ export default function Login() {
                             </div>
                           </div>
 
+                          <div className="form-group row mt-2">
+                            <div className="col-12 text-right">
+                              <Link to="/forgot-password" className="text-muted" style={{ fontSize: 13 }}>
+                                Forgot password?
+                              </Link>
+                            </div>
+                          </div>
+
                           <div className="form-group row mt-4">
                             <div className="col-12">
                               <motion.button
