@@ -17,9 +17,6 @@ export default function Dashboard() {
   const [showAddDevice, setShowAddDevice] = useState(false);
 
   useEffect(() => {
-    if (window.UroraApp && typeof window.UroraApp.init === 'function') {
-      try { window.UroraApp.init(); } catch (e) { console.error(e); }
-    }
     fetchData();
   }, []);
 

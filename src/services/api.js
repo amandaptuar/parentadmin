@@ -3,7 +3,27 @@ import { toast } from '../utils/toast';
 const BASE_URL = import.meta.env.VITE_API_URL || 'https://160-153-179-249.sslip.io';
 
 export function getToken()    { return localStorage.getItem('vigil_token') || null; }
-export function getUser()     { try { return JSON.parse(localStorage.getItem('vigil_user') || 'null'); } catch { return null; } }
+export function getUser()     { 
+  try { 
+    const raw = localStorage.getItem('vigil_user');
+    if (!raw) return null;
+    const u = JSON.parse(raw);
+    return u?.user || u;
+  } catch { 
+    return null; 
+  } 
+}
+export function saveUser(userObj) {
+  try {
+    if (userObj) {
+      const u = userObj?.user || userObj;
+      localStorage.setItem('vigil_user', JSON.stringify(u));
+      window.dispatchEvent(new Event('user_updated'));
+    }
+  } catch (e) {
+    console.error('saveUser error:', e);
+  }
+}
 export function getParentId() { const u = getUser(); return u?._id || u?.id || null; }
 
 export function logout() {
@@ -11,7 +31,9 @@ export function logout() {
   localStorage.removeItem('vigil_user');
   localStorage.removeItem('vigil_refresh_token');
   localStorage.removeItem('vigil_selected_child');
+  window.dispatchEvent(new Event('user_updated'));
 }
+
 
 function authHeaders() {
   const t = getToken();

@@ -32,18 +32,6 @@ function GuestRoute({ children }) {
 }
 
 function App() {
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (window.UroraApp && typeof window.UroraApp.init === 'function') {
-        try {
-          window.UroraApp.init();
-        } catch (e) {
-          console.error("UroraApp init error:", e);
-        }
-      }
-    }, 100);
-    return () => clearTimeout(timer);
-  }, []);
 
   // Vigil_015 — after logout, the browser's back button could restore the
   // dashboard from bfcache (in-memory snapshot) even though localStorage was
@@ -59,9 +47,16 @@ function App() {
     return () => window.removeEventListener('pageshow', handlePageShow);
   }, []);
 
+  const getBasename = () => {
+    const p = window.location.pathname;
+    if (p.startsWith('/parentsaccess')) return '/parentsaccess';
+    if (p.startsWith('/parent')) return '/parent';
+    return '';
+  };
+
   return (
     <ChildProvider>
-    <Router basename="/parent">
+    <Router basename={getBasename()}>
       <Preloader />
       <Routes>
         {/* Guest-only pages — redirect away if already logged in (Vigil_025) */}

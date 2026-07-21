@@ -1,15 +1,16 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 export default function Preloader() {
+  const [visible, setVisible] = useState(true);
+
   useEffect(() => {
-    if (window.$) {
-      window.$('#status').fadeOut();
-      window.$('#preloader').delay(350).fadeOut('slow');
-      window.$('body').delay(350).css({
-        'overflow': 'visible'
-      });
-    }
+    const timer = setTimeout(() => {
+      setVisible(false);
+    }, 300);
+    return () => clearTimeout(timer);
   }, []);
+
+  if (!visible) return null;
 
   return (
     <div id="preloader">
@@ -18,4 +19,4 @@ export default function Preloader() {
       </div>
     </div>
   );
-}
+}

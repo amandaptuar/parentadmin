@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { login } from '../services/api';
+import logoImg from '/image.png';
+import extraImg from '/assets/images/extra.png';
 
 const inputStyle = {
   color: '#2d3b48',
@@ -21,11 +23,6 @@ export default function Login() {
 
   useEffect(() => {
     document.body.classList.remove('fixed-left');
-    if (window.$) {
-      window.$('#status').fadeOut();
-      window.$('#preloader').delay(350).fadeOut('slow');
-      window.$('body').delay(350).css({ overflow: 'visible' });
-    }
     return () => document.body.classList.add('fixed-left');
   }, []);
 
@@ -74,7 +71,7 @@ export default function Login() {
                     initial={{ opacity: 0, x: -50 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.8 }}
-                    src="/assets/images/extra.png"
+                    src={extraImg}
                     alt="Illustration"
                     className="img-fluid"
                   />
@@ -97,7 +94,7 @@ export default function Login() {
                     <div className="card-body">
                       <div className="text-center pt-3 pb-4">
                         <Link to="/login">
-                          <img src="/image.png" alt="logo" height="60" style={{ maxWidth: '200px', objectFit: 'contain' }} />
+                          <img src={logoImg} alt="logo" height="60" style={{ maxWidth: '200px', objectFit: 'contain' }} />
                         </Link>
                         <h5 className="mt-3 text-muted font-weight-normal">Sign in to continue</h5>
                       </div>

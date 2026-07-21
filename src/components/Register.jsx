@@ -18,13 +18,6 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
 
-  useEffect(() => {
-    if (window.$) {
-      window.$('#status').fadeOut();
-      window.$('#preloader').delay(350).fadeOut('slow');
-      window.$('body').delay(350).css({ overflow: 'visible' });
-    }
-  }, []);
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -82,7 +75,7 @@ export default function Register() {
                     initial={{ opacity: 0, x: -50 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.8 }}
-                    src="/assets/images/extra.png" 
+                    src="assets/images/extra.png" 
                     alt="Illustration" 
                     className="img-fluid drop-shadow-2xl" 
                   />
@@ -107,7 +100,7 @@ export default function Register() {
 
                       <div className="text-center pt-3 pb-4">
                         <Link to="/login">
-                          <img src="/image.png" alt="logo" height="60" style={{ maxWidth: '200px', objectFit: 'contain' }} />
+                          <img src="image.png" alt="logo" height="60" style={{ maxWidth: '200px', objectFit: 'contain' }} />
                         </Link>
                         <h5 className="mt-3 text-muted font-weight-normal">Create an account</h5>
                       </div>

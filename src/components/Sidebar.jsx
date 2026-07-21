@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import logoImg from '/image.png';
 
 export default function Sidebar({ onClose }) {
   const [openMenu, setOpenMenu] = useState('');
@@ -17,10 +18,11 @@ export default function Sidebar({ onClose }) {
       <div className="topbar-left">
           <div className="text-center">
               <Link to="/" className="logo">
-                  <img src="/image.png" alt="logo" className="logo-large" style={{ height: '60px', maxWidth: '200px', objectFit: 'contain' }} />
+                  <img src={logoImg} alt="logo" className="logo-large" style={{ height: '60px', maxWidth: '200px', objectFit: 'contain' }} />
               </Link>
           </div>
       </div>
+
 
       <div className="sidebar-inner slimscrollleft" id="sidebar-main">
           <div id="sidebar-menu">

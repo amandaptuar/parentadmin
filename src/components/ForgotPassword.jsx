@@ -97,7 +97,7 @@ export default function ForgotPassword() {
                     <div className="card-body">
                       <div className="text-center pt-3 pb-4">
                         <Link to="/login">
-                          <img src="/image.png" alt="logo" height="60" style={{ maxWidth: '200px', objectFit: 'contain' }} />
+                          <img src="image.png" alt="logo" height="60" style={{ maxWidth: '200px', objectFit: 'contain' }} />
                         </Link>
                         <h5 className="mt-3 text-muted font-weight-normal">Reset your password</h5>
                       </div>
