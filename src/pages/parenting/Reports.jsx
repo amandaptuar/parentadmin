@@ -2,13 +2,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
   FileText, Calendar, TrendingUp,
-  ShieldAlert, Activity, PieChart as PieChartIcon, HeartPulse, CheckCircle
+  ShieldAlert, Activity, PieChart as PieChartIcon, HeartPulse, CheckCircle, Lock
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell
 } from 'recharts';
-import { getChildAppsSummary, getChildSms, listAiDaily, getAiDaily } from '../../services/api';
+import { getChildAppsSummary, getChildSms, listAiDaily, getAiDaily, getMySubscription } from '../../services/api';
 import { useChild } from '../../context/ChildContext';
 import ChildSelector from '../../components/ChildSelector';
 
@@ -25,6 +25,13 @@ export const Reports = () => {
   const [appsSummary, setAppsSummary] = useState(null);
   const [messageCount, setMessageCount] = useState(0);
   const [aiInsight, setAiInsight] = useState(null); // most recent AI daily_intelligence, or null
+  const [aiAllowed, setAiAllowed] = useState(true); // gated by the plan's aiAlerts flag
+
+  useEffect(() => {
+    getMySubscription()
+      .then(res => setAiAllowed(res?.plan?.feature_flags?.aiAlerts !== false))
+      .catch(() => setAiAllowed(true));
+  }, []);
 
   const fetchReport = useCallback(async () => {
     if (!selectedChild?._id) return;
@@ -33,14 +40,14 @@ export const Reports = () => {
       const [apps, sms, aiList] = await Promise.allSettled([
         getChildAppsSummary(selectedChild._id, { days: 7 }),
         getChildSms(selectedChild._id, { limit: 1 }),
-        listAiDaily(selectedChild._id),
+        aiAllowed ? listAiDaily(selectedChild._id) : Promise.resolve(null),
       ]);
 
       if (apps.status === 'fulfilled') setAppsSummary(apps.value);
       if (sms.status === 'fulfilled') setMessageCount(sms.value?.total || 0);
 
       // Pull the most recent day that actually has an AI analysis.
-      if (aiList.status === 'fulfilled') {
+      if (aiAllowed && aiList.status === 'fulfilled' && aiList.value) {
         const days = aiList.value?.days || aiList.value?.dates || [];
         const latestDate = Array.isArray(days) && days.length > 0 ? days[days.length - 1] : null;
         if (latestDate) {
@@ -55,7 +62,7 @@ export const Reports = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedChild]);
+  }, [selectedChild, aiAllowed]);
 
   useEffect(() => { fetchReport(); }, [fetchReport]);
 
@@ -143,7 +150,12 @@ export const Reports = () => {
                     <div className="col-lg-5 mb-4 mb-lg-0">
                       <h5 className="header-title mb-3 d-flex align-items-center gap-2"><Activity size={18} className="text-primary" /> AI Behavioral Insights</h5>
                       <div className="bg-white p-3 rounded shadow-sm border border-light h-100">
-                        {!aiInsight ? (
+                        {!aiAllowed ? (
+                          <div className="text-center text-muted py-4">
+                            <Lock size={28} className="mb-2 opacity-50" />
+                            <p className="m-0" style={{ fontSize: 14 }}>AI Analysis is a paid-plan feature. Upgrade your plan to unlock behavioral insights.</p>
+                          </div>
+                        ) : !aiInsight ? (
                           <div className="text-center text-muted py-4">
                             <ShieldAlert size={28} className="mb-2 opacity-50" />
                             <p className="m-0" style={{ fontSize: 14 }}>No AI analysis available yet. It's generated automatically once the child's device has sent SMS/call activity.</p>
