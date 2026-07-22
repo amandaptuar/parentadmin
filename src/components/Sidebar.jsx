@@ -1,16 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import logoImg from '/image.png';
+import { getMySubscription } from '../services/api';
 
 export default function Sidebar({ onClose, collapsed }) {
   const [openMenu, setOpenMenu] = useState('');
+  // null = not loaded yet (show everything to avoid flicker); once loaded,
+  // only flags explicitly set to false on the plan hide their menu item.
+  const [flags, setFlags] = useState(null);
+
+  useEffect(() => {
+    getMySubscription()
+      .then(res => setFlags(res?.plan?.feature_flags || {}))
+      .catch(() => setFlags({}));
+  }, []);
+
+  const has = (flag) => !flags || flags[flag] !== false;
 
   const toggleMenu = (menu) => {
     setOpenMenu(openMenu === menu ? '' : menu);
   };
 
   return (
-    <div className="left side-menu" style={{ transform: collapsed ? 'translateX(-100%)' : 'translateX(0)', transition: 'transform 0.25s ease' }}>
+    <div className="left side-menu" style={collapsed ? { display: 'none' } : undefined}>
       <button type="button" onClick={onClose} className="button-menu-mobile button-menu-mobile-topbar open-left waves-effect">
           <i className="mdi mdi-close"></i>
       </button>
@@ -60,6 +72,7 @@ export default function Sidebar({ onClose, collapsed }) {
                       </Link>
                   </li>
 
+                  {has('callLogs') && (
                   <li className={`has_sub ${openMenu === 'calls' ? 'nav-active' : ''}`}>
                       <a href="#!" onClick={(e) => { e.preventDefault(); toggleMenu('calls'); }} className="waves-effect">
                           <i className="mdi mdi-phone-log"></i>
@@ -76,7 +89,9 @@ export default function Sidebar({ onClose, collapsed }) {
                           <li><Link to="/dashboard/calls/recorded">Recorded</Link></li>
                       </ul>
                   </li>
+                  )}
 
+                  {has('smsMonitoring') && (
                   <li className={`has_sub ${openMenu === 'sms' ? 'nav-active' : ''}`}>
                       <a href="#!" onClick={(e) => { e.preventDefault(); toggleMenu('sms'); }} className="waves-effect">
                           <i className="mdi mdi-message-text"></i>
@@ -92,7 +107,9 @@ export default function Sidebar({ onClose, collapsed }) {
                           <li><Link to="/dashboard/sms/alerts">AI Alerts</Link></li>
                       </ul>
                   </li>
+                  )}
 
+                  {has('socialMonitoring') && (
                   <li className={`has_sub ${openMenu === 'whatsapp' ? 'nav-active' : ''}`}>
                       <a href="#!" onClick={(e) => { e.preventDefault(); toggleMenu('whatsapp'); }} className="waves-effect">
                           <i className="mdi mdi-whatsapp"></i>
@@ -109,7 +126,9 @@ export default function Sidebar({ onClose, collapsed }) {
                           <li><Link to="/dashboard/whatsapp/groups">Group Activity</Link></li>
                       </ul>
                   </li>
+                  )}
 
+                  {has('socialMonitoring') && (
                   <li className={`has_sub ${openMenu === 'social' ? 'nav-active' : ''}`}>
                       <a href="#!" onClick={(e) => { e.preventDefault(); toggleMenu('social'); }} className="waves-effect">
                           <i className="mdi mdi-instagram"></i>
@@ -127,7 +146,9 @@ export default function Sidebar({ onClose, collapsed }) {
                           <li><Link to="/dashboard/social-media/facebook">Facebook</Link></li>
                       </ul>
                   </li>
+                  )}
 
+                  {has('mediaMonitoring') && (
                   <li className={`has_sub ${openMenu === 'gallery' ? 'nav-active' : ''}`}>
                       <a href="#!" onClick={(e) => { e.preventDefault(); toggleMenu('gallery'); }} className="waves-effect">
                           <i className="mdi mdi-folder-multiple-image"></i>
@@ -140,6 +161,7 @@ export default function Sidebar({ onClose, collapsed }) {
                           <li><Link to="/dashboard/gallery">Overview</Link></li>
                       </ul>
                   </li>
+                  )}
 
                   <li className={`has_sub ${openMenu === 'location' ? 'nav-active' : ''}`}>
                       <a href="#!" onClick={(e) => { e.preventDefault(); toggleMenu('location'); }} className="waves-effect">

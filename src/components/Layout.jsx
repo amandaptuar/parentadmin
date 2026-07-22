@@ -34,7 +34,7 @@ export default function Layout() {
     <div id="wrapper">
       <ToastContainer />
       <Sidebar onClose={toggleMobileMenu} collapsed={collapsed} />
-      <div className="content-page" style={{ marginLeft: collapsed ? 0 : undefined, transition: 'margin-left 0.25s ease' }}>
+      <div className="content-page" style={collapsed ? { marginLeft: 0 } : undefined}>
         <div className="content">
           <Topbar onLogout={handleLogout} onToggleMenu={toggleMobileMenu} />
           <Outlet />

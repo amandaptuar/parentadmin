@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Bell, ShieldCheck, Battery, Wifi, WifiOff, Plus, RefreshCw, Smartphone, X, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, Battery, Wifi, WifiOff, Plus, RefreshCw, Smartphone, X, AlertTriangle } from 'lucide-react';
 import { getChildren, getUser, getMySubscription, getDashboardSummary } from '../services/api';
 import { useChild } from '../context/ChildContext';
 
@@ -79,16 +79,6 @@ export default function Dashboard() {
             <button className="btn btn-light rounded-circle shadow-sm p-2" onClick={fetchData} title="Refresh">
               <RefreshCw size={18} className="text-dark" />
             </button>
-            <Link to="/dashboard/notifications">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="btn btn-light rounded-circle shadow-sm p-2 d-flex align-items-center justify-content-center"
-                style={{ width: '40px', height: '40px' }}
-              >
-                <Bell size={20} className="text-dark" />
-              </motion.button>
-            </Link>
           </div>
         </div>
 
