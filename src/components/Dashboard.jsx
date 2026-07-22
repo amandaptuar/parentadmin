@@ -256,7 +256,7 @@ export default function Dashboard() {
             </div>
             <div style={{ padding: 24 }}>
               {[
-                { step: 1, title: 'Download Vigil Child App',   desc: 'Install the Vigil Child app on the device you want to monitor (available on Android).' },
+                { step: 1, title: 'Download Vigil Child App',   desc: 'Install the Vigil Child app on the device you want to monitor (available on Android).', link: 'https://drive.google.com/file/d/1QXkj26yfIGkeSoyNvTp2V8ZmYxRBegJ2/view?usp=sharing' },
                 { step: 2, title: 'Sign In With Your Parent Account', desc: `On the child device, open the app and sign in with your parent email (${user?.email || 'your registered email'}) and your account password.` },
                 { step: 3, title: 'Approve via OTP',            desc: 'You will receive an OTP on your email. Enter it in the child app to complete pairing.' },
                 { step: 4, title: 'Done!',                      desc: 'The device will appear on your dashboard automatically once pairing is confirmed.' },
@@ -268,6 +268,11 @@ export default function Dashboard() {
                   <div>
                     <h6 className="m-0 font-weight-bold">{s.title}</h6>
                     <p className="m-0 text-muted" style={{ fontSize: 13 }}>{s.desc}</p>
+                    {s.link && (
+                      <a href={s.link} target="_blank" rel="noopener noreferrer" className="small font-weight-bold" style={{ fontSize: 13 }}>
+                        Download APK &rarr;
+                      </a>
+                    )}
                   </div>
                 </div>
               ))}
