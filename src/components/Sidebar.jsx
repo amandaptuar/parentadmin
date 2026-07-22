@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import logoImg from '/image.png';
 
-export default function Sidebar({ onClose }) {
+export default function Sidebar({ onClose, collapsed }) {
   const [openMenu, setOpenMenu] = useState('');
 
   const toggleMenu = (menu) => {
@@ -10,7 +10,7 @@ export default function Sidebar({ onClose }) {
   };
 
   return (
-    <div className="left side-menu">
+    <div className="left side-menu" style={{ transform: collapsed ? 'translateX(-100%)' : 'translateX(0)', transition: 'transform 0.25s ease' }}>
       <button type="button" onClick={onClose} className="button-menu-mobile button-menu-mobile-topbar open-left waves-effect">
           <i className="mdi mdi-close"></i>
       </button>
@@ -24,7 +24,7 @@ export default function Sidebar({ onClose }) {
       </div>
 
 
-      <div className="sidebar-inner slimscrollleft" id="sidebar-main">
+      <div className="sidebar-inner slimscrollleft" id="sidebar-main" style={{ overflowY: 'auto', overflowX: 'hidden', maxHeight: 'calc(100% - 90px)' }}>
           <div id="sidebar-menu">
               <ul>
                   <li className="menu-title">Main</li>
