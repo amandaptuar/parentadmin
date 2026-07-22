@@ -31,15 +31,9 @@ export function logout() {
   localStorage.removeItem('vigil_user');
   localStorage.removeItem('vigil_refresh_token');
   localStorage.removeItem('vigil_selected_child');
-<<<<<<< Updated upstream
   window.dispatchEvent(new Event('user_updated'));
 }
 
-
-=======
-}
-
->>>>>>> Stashed changes
 function authHeaders() {
   const t = getToken();
   return t ? { Authorization: `Bearer ${t}` } : {};
@@ -132,11 +126,8 @@ export const createCheckoutSession = (payload) =>
 
 export const getDashboardSummary = () => request('/api/parent-data/dashboard-summary');
 
-<<<<<<< Updated upstream
-=======
 export const getMyAlerts = (limit = 10) => request(`/api/parent-data/alerts?limit=${limit}`);
 
->>>>>>> Stashed changes
 // ── Parent-facing monitoring data ─────────────────────────────────────────────
 
 export const getChildSms = (childId, params = {}) => {

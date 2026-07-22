@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Mail, Phone, Edit, Settings, Activity, ShieldCheck, CheckCircle, X, Loader2, Crown } from 'lucide-react';
 import {
-  getProfile, updateProfile, getChildren, getUser,
+  getProfile, updateProfile, getChildren, getUser, saveUser,
   getMySubscription, getPlans, createCheckoutSession,
 } from '../services/api';
 import { useChild } from '../context/ChildContext';
@@ -22,6 +22,7 @@ export default function Profile() {
 
   const [form, setForm] = useState({
     name:        '',
+    email:       '',
     mobile:      '',
     address:     '',
     city:        '',
@@ -51,6 +52,7 @@ export default function Profile() {
           setProfile(u);
           setForm({
             name:        u.name        || '',
+            email:       u.email       || '',
             mobile:      u.mobile      || '',
             address:     u.address     || '',
             city:        u.city        || '',
@@ -134,6 +136,7 @@ export default function Profile() {
     try {
       await updateProfile(form);
       setProfile(prev => ({ ...prev, ...form }));
+      saveUser({ ...getUser(), ...form });
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
@@ -350,8 +353,9 @@ export default function Profile() {
                       </div>
                       <div className="mb-3">
                         <label className="text-muted font-weight-bold small">Email Address</label>
-                        <input type="email" className="form-control bg-light border-0" value={profile.email || ''} disabled />
-                        <small className="text-muted">Email is your login ID and can't be changed here. Contact support if you need to update it.</small>
+                        <input type="email" className="form-control bg-light border-0"
+                          value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+                        <small className="text-muted">This is your login ID — changing it means you'll sign in with the new address next time.</small>
                       </div>
                       <div className="mb-3">
                         <label className="text-muted font-weight-bold small">Address</label>

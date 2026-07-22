@@ -257,7 +257,7 @@ export default function Dashboard() {
             <div style={{ padding: 24 }}>
               {[
                 { step: 1, title: 'Download Vigil Child App',   desc: 'Install the Vigil Child app on the device you want to monitor (available on Android).' },
-                { step: 2, title: 'Open the App & Enter Email', desc: `On the child device, open the app and enter your parent email: ${user?.email || 'your registered email'}.` },
+                { step: 2, title: 'Sign In With Your Parent Account', desc: `On the child device, open the app and sign in with your parent email (${user?.email || 'your registered email'}) and your account password.` },
                 { step: 3, title: 'Approve via OTP',            desc: 'You will receive an OTP on your email. Enter it in the child app to complete pairing.' },
                 { step: 4, title: 'Done!',                      desc: 'The device will appear on your dashboard automatically once pairing is confirmed.' },
               ].map(s => (
