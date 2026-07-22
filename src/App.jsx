@@ -47,6 +47,13 @@ function App() {
     return () => window.removeEventListener('pageshow', handlePageShow);
   }, []);
 
+  const getBasename = () => {
+    const p = window.location.pathname;
+    if (p.startsWith('/parentsaccess')) return '/parentsaccess';
+    if (p.startsWith('/parent')) return '/parent';
+    return '';
+  };
+
   return (
     <ChildProvider>
       <Router basename={getBasename()}>
