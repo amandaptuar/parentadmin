@@ -32,9 +32,7 @@ export default function Sidebar({ onClose }) {
                   <li>
                       <Link to="/" className="waves-effect">
                           <i className="mdi mdi-view-dashboard"></i>
-                          <span> Dashboard
-                              <span className="badge badge-pill badge-primary float-right">7</span>
-                          </span>
+                          <span> Dashboard</span>
                       </Link>
                   </li>
 

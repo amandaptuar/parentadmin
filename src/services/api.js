@@ -31,10 +31,15 @@ export function logout() {
   localStorage.removeItem('vigil_user');
   localStorage.removeItem('vigil_refresh_token');
   localStorage.removeItem('vigil_selected_child');
+<<<<<<< Updated upstream
   window.dispatchEvent(new Event('user_updated'));
 }
 
 
+=======
+}
+
+>>>>>>> Stashed changes
 function authHeaders() {
   const t = getToken();
   return t ? { Authorization: `Bearer ${t}` } : {};
@@ -127,6 +132,11 @@ export const createCheckoutSession = (payload) =>
 
 export const getDashboardSummary = () => request('/api/parent-data/dashboard-summary');
 
+<<<<<<< Updated upstream
+=======
+export const getMyAlerts = (limit = 10) => request(`/api/parent-data/alerts?limit=${limit}`);
+
+>>>>>>> Stashed changes
 // ── Parent-facing monitoring data ─────────────────────────────────────────────
 
 export const getChildSms = (childId, params = {}) => {
@@ -139,7 +149,33 @@ export const getChildCalls = (childId, params = {}) => {
   return request(`/api/parent-data/children/${childId}/calls${q ? '?' + q : ''}`);
 };
 
+export const getChildSocial = (childId, params = {}) => {
+  const q = new URLSearchParams(params).toString();
+  return request(`/api/parent-data/children/${childId}/social${q ? '?' + q : ''}`);
+};
+
+export const getChildFiles = (childId, params = {}) => {
+  const q = new URLSearchParams(params).toString();
+  return request(`/api/parent-data/children/${childId}/files${q ? '?' + q : ''}`);
+};
+
 export const getChildApps = (childId, params = {}) => {
   const q = new URLSearchParams(params).toString();
   return request(`/api/parent-data/children/${childId}/apps${q ? '?' + q : ''}`);
 };
+
+export const getChildAppsSummary = (childId, params = {}) => {
+  const q = new URLSearchParams(params).toString();
+  return request(`/api/parent-data/children/${childId}/apps-summary${q ? '?' + q : ''}`);
+};
+
+// ── AI Behaviour Analysis ──────────────────────────────────────────────────────
+
+export const runAiAnalysis = (childId, date) =>
+  request(`/api/ai/children/${childId}/analyze`, { method: 'POST', body: JSON.stringify(date ? { date } : {}) }, true);
+
+export const getAiDaily = (childId, date) =>
+  request(`/api/ai/children/${childId}/daily/${date}`, {}, true);
+
+export const listAiDaily = (childId) =>
+  request(`/api/ai/children/${childId}/daily`, {}, true);

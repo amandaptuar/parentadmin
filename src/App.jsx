@@ -47,50 +47,43 @@ function App() {
     return () => window.removeEventListener('pageshow', handlePageShow);
   }, []);
 
-  const getBasename = () => {
-    const p = window.location.pathname;
-    if (p.startsWith('/parentsaccess')) return '/parentsaccess';
-    if (p.startsWith('/parent')) return '/parent';
-    return '';
-  };
-
   return (
     <ChildProvider>
-    <Router basename={getBasename()}>
-      <Preloader />
-      <Routes>
-        {/* Guest-only pages — redirect away if already logged in (Vigil_025) */}
-        <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
-        <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
-        <Route path="/forgot-password" element={<GuestRoute><ForgotPassword /></GuestRoute>} />
+      <Router basename={getBasename()}>
+        <Preloader />
+        <Routes>
+          {/* Guest-only pages — redirect away if already logged in (Vigil_025) */}
+          <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
+          <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
+          <Route path="/forgot-password" element={<GuestRoute><ForgotPassword /></GuestRoute>} />
 
-        {/* Protected dashboard layout */}
-        <Route element={
-          <ProtectedRoute>
-            <Layout />
-          </ProtectedRoute>
-        }>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/help-center" element={<HelpCenter />} />
-          
-          {/* Parent Monitoring Routes */}
-          <Route path="/dashboard/live-activity" element={<LiveActivity />} />
-          <Route path="/dashboard/calls/*" element={<CallsMonitoring />} />
-          <Route path="/dashboard/sms/*" element={<SmsMonitoring />} />
-          <Route path="/dashboard/whatsapp/*" element={<WhatsappMonitoring />} />
-          <Route path="/dashboard/social-media/*" element={<SocialMonitoring />} />
-          <Route path="/dashboard/gallery/*" element={<GalleryMonitoring />} />
-          <Route path="/dashboard/location/*" element={<LocationTracking />} />
-          <Route path="/dashboard/screen-time/*" element={<ScreenTime />} />
-          <Route path="/dashboard/reports/*" element={<Reports />} />
-          <Route path="/dashboard/notifications/*" element={<NotificationsCenter />} />
-        </Route>
+          {/* Protected dashboard layout */}
+          <Route element={
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          }>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/help-center" element={<HelpCenter />} />
 
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    </Router>
+            {/* Parent Monitoring Routes */}
+            <Route path="/dashboard/live-activity" element={<LiveActivity />} />
+            <Route path="/dashboard/calls/*" element={<CallsMonitoring />} />
+            <Route path="/dashboard/sms/*" element={<SmsMonitoring />} />
+            <Route path="/dashboard/whatsapp/*" element={<WhatsappMonitoring />} />
+            <Route path="/dashboard/social-media/*" element={<SocialMonitoring />} />
+            <Route path="/dashboard/gallery/*" element={<GalleryMonitoring />} />
+            <Route path="/dashboard/location/*" element={<LocationTracking />} />
+            <Route path="/dashboard/screen-time/*" element={<ScreenTime />} />
+            <Route path="/dashboard/reports/*" element={<Reports />} />
+            <Route path="/dashboard/notifications/*" element={<NotificationsCenter />} />
+          </Route>
+
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </Router>
     </ChildProvider>
   );
 }

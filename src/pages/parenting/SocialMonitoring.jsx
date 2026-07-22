@@ -1,219 +1,159 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Camera, Globe, Send, ShieldAlert, Heart, 
-  MessageCircle, Users, Activity, Eye, AlertTriangle
-} from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Users, MessageCircle, Camera } from 'lucide-react';
+import { getChildSocial } from '../../services/api';
+import { useChild } from '../../context/ChildContext';
+import ChildSelector from '../../components/ChildSelector';
 
-const platforms = [
-  { id: 'instagram', name: 'Instagram', icon: Camera, color: '#E1306C', bg: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)' },
-  { id: 'snapchat', name: 'Snapchat', icon: Activity, color: '#FFFC00', bg: '#FFFC00', textColor: '#000' },
-  { id: 'tiktok', name: 'TikTok', icon: Eye, color: '#000000', bg: '#000000' },
-  { id: 'telegram', name: 'Telegram', icon: Send, color: '#0088cc', bg: '#0088cc' },
-  { id: 'facebook', name: 'Facebook', icon: Globe, color: '#1877F2', bg: '#1877F2' },
-];
-
-const engagementData = [
-  { day: 'Mon', likes: 120, comments: 45 },
-  { day: 'Tue', likes: 200, comments: 80 },
-  { day: 'Wed', likes: 150, comments: 50 },
-  { day: 'Thu', likes: 300, comments: 120 },
-  { day: 'Fri', likes: 250, comments: 90 },
-  { day: 'Sat', likes: 400, comments: 150 },
-  { day: 'Sun', likes: 380, comments: 140 },
-];
-
-const recentActivity = [
-  { id: 1, type: 'like', text: 'Liked a post by @stranger99', time: '10 mins ago', risk: 'low' },
-  { id: 2, type: 'comment', text: 'Commented: "Looking good!" on @bestfriend\'s photo', time: '1 hour ago', risk: 'low' },
-  { id: 3, type: 'dm', text: 'Received message from unknown user', time: '2 hours ago', risk: 'high' },
-  { id: 4, type: 'follow', text: 'Started following @suspicious_account', time: '5 hours ago', risk: 'medium' },
-];
+function timeAgo(iso) {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
 
 export const SocialMonitoring = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [activePlatform, setActivePlatform] = useState(platforms[0]);
+  const { selectedChild } = useChild();
+  const [apps, setApps] = useState([]);
+  const [activeApp, setActiveApp] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  // Sync tab with URL
-  useEffect(() => {
-    const path = location.pathname.split('/').pop();
-    const platform = platforms.find(p => p.id === path);
-    if (platform) {
-      setActivePlatform(platform);
-    } else {
-      setActivePlatform(platforms[0]); // default
+  const fetchData = useCallback(async () => {
+    if (!selectedChild?._id) return;
+    setLoading(true);
+    try {
+      const data = await getChildSocial(selectedChild._id);
+      const list = data.apps || [];
+      setApps(list);
+      setActiveApp(list[0] || null);
+    } catch (err) {
+      console.error(err);
+      setApps([]);
+      setActiveApp(null);
+    } finally {
+      setLoading(false);
     }
-  }, [location]);
+  }, [selectedChild]);
 
-  const handleTabChange = (platform) => {
-    setActivePlatform(platform);
-    if (platform.id === platforms[0].id) {
-      navigate('/dashboard/social-media');
-    } else {
-      navigate(`/dashboard/social-media/${platform.id}`);
-    }
-  };
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  // Flatten all messages across conversations for the active app, newest first.
+  const activityFeed = (activeApp?.conversations || [])
+    .flatMap(c => c.messages.map(m => ({ ...m, contact: c.contact })))
+    .sort((a, b) => new Date(b.time) - new Date(a.time))
+    .slice(0, 20);
 
   return (
     <div className="page-content-wrapper">
       <div className="container-fluid pt-4">
-        
-        {/* Header Section */}
+
         <div className="row mb-4">
           <div className="col-12 d-flex justify-content-between align-items-center flex-wrap gap-3">
             <h4 className="page-title m-0 d-flex align-items-center gap-2">
               <Users className="text-primary" /> Social Media Monitoring
             </h4>
+            <ChildSelector />
           </div>
         </div>
 
-        {/* Platform Tabs */}
-        <div className="row mb-4">
-          <div className="col-12">
-            <div className="d-flex gap-3 overflow-auto pb-2" style={{ scrollbarWidth: 'none' }}>
-              {platforms.map(platform => {
-                const Icon = platform.icon;
-                const isActive = activePlatform.id === platform.id;
-                return (
-                  <motion.button
-                    whileHover={{ y: -2 }}
-                    whileTap={{ scale: 0.95 }}
-                    key={platform.id}
-                    onClick={() => handleTabChange(platform)}
-                    className={`btn rounded-lg px-4 py-3 d-flex align-items-center gap-2 border-0 shadow-sm ${isActive ? 'text-white' : 'bg-white text-dark'}`}
-                    style={{ 
-                      background: isActive ? platform.bg : 'white',
-                      minWidth: '160px',
-                      color: isActive && platform.textColor ? platform.textColor : ''
-                    }}
-                  >
-                    <Icon size={20} color={isActive ? (platform.textColor || 'white') : platform.color} />
-                    <span className="font-weight-bold">{platform.name}</span>
-                  </motion.button>
-                );
-              })}
+        {!selectedChild ? (
+          <div className="text-center text-muted py-5">Select a child to view social media activity.</div>
+        ) : loading ? (
+          <div className="text-center text-muted py-5">
+            <div className="spinner-border spinner-border-sm me-2"></div> Loading...
+          </div>
+        ) : apps.length === 0 ? (
+          <div className="card border-0 shadow-sm rounded-lg">
+            <div className="card-body text-center py-5 text-muted">
+              <Camera size={40} className="mb-3 opacity-50" />
+              <h5>No social app activity captured yet</h5>
+              <p className="m-0">Notifications and on-screen text from apps like Instagram, Snapchat, and Telegram will appear here once captured on the child device.</p>
             </div>
           </div>
-        </div>
-
-        {/* Platform Dashboard */}
-        <motion.div 
-          key={activePlatform.id}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          {/* Analytics Cards */}
-          <div className="row mb-4">
-            <div className="col-md-3">
-              <div className="card shadow-sm border-0 rounded-lg">
-                <div className="card-body text-center">
-                  <div className="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style={{ width: '48px', height: '48px', background: 'rgba(24, 119, 242, 0.1)' }}>
-                    <Users className="text-primary" size={24} />
-                  </div>
-                  <h3 className="m-0 font-weight-bold">1,245</h3>
-                  <p className="text-muted mb-0 font-weight-bold text-uppercase" style={{ fontSize: '12px' }}>Followers</p>
-                </div>
-              </div>
-            </div>
-            <div className="col-md-3">
-              <div className="card shadow-sm border-0 rounded-lg">
-                <div className="card-body text-center">
-                  <div className="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style={{ width: '48px', height: '48px', background: 'rgba(225, 48, 108, 0.1)' }}>
-                    <Heart className="text-danger" size={24} />
-                  </div>
-                  <h3 className="m-0 font-weight-bold">4.2K</h3>
-                  <p className="text-muted mb-0 font-weight-bold text-uppercase" style={{ fontSize: '12px' }}>Total Likes</p>
-                </div>
-              </div>
-            </div>
-            <div className="col-md-3">
-              <div className="card shadow-sm border-0 rounded-lg">
-                <div className="card-body text-center">
-                  <div className="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style={{ width: '48px', height: '48px', background: 'rgba(0, 150, 136, 0.1)' }}>
-                    <MessageCircle className="text-success" size={24} />
-                  </div>
-                  <h3 className="m-0 font-weight-bold">850</h3>
-                  <p className="text-muted mb-0 font-weight-bold text-uppercase" style={{ fontSize: '12px' }}>Comments</p>
-                </div>
-              </div>
-            </div>
-            <div className="col-md-3">
-              <div className="card shadow-sm border-0 rounded-lg bg-danger text-white">
-                <div className="card-body text-center">
-                  <div className="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2 bg-white text-danger" style={{ width: '48px', height: '48px' }}>
-                    <ShieldAlert size={24} />
-                  </div>
-                  <h3 className="m-0 font-weight-bold text-white">2</h3>
-                  <p className="text-white-50 mb-0 font-weight-bold text-uppercase" style={{ fontSize: '12px' }}>Risk Alerts</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="row">
-            {/* Chart */}
-            <div className="col-lg-8 mb-4">
-              <div className="card shadow-sm border-0 rounded-lg h-100">
-                <div className="card-body">
-                  <h5 className="header-title mb-4">Engagement Overview ({activePlatform.name})</h5>
-                  <div style={{ height: '300px' }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={engagementData}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
-                        <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{fill: '#999'}} />
-                        <YAxis axisLine={false} tickLine={false} tick={{fill: '#999'}} />
-                        <Tooltip 
-                          cursor={{fill: 'transparent'}}
-                          contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                        />
-                        <Bar dataKey="likes" name="Likes" fill={activePlatform.color} radius={[4, 4, 0, 0]} barSize={20} />
-                        <Bar dataKey="comments" name="Comments" fill="#eaeaea" radius={[4, 4, 0, 0]} barSize={20} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
+        ) : (
+          <>
+            {/* App Tabs — only apps that actually have captured data */}
+            <div className="row mb-4">
+              <div className="col-12">
+                <div className="d-flex gap-3 overflow-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+                  {apps.map(app => {
+                    const isActive = activeApp?.app === app.app;
+                    const msgCount = app.conversations.reduce((s, c) => s + c.messages.length, 0);
+                    return (
+                      <motion.button
+                        whileHover={{ y: -2 }}
+                        whileTap={{ scale: 0.95 }}
+                        key={app.app}
+                        onClick={() => setActiveApp(app)}
+                        className={`btn rounded-lg px-4 py-3 d-flex align-items-center gap-2 border-0 shadow-sm ${isActive ? 'bg-primary text-white' : 'bg-white text-dark'}`}
+                        style={{ minWidth: '160px' }}
+                      >
+                        <MessageCircle size={20} />
+                        <span className="font-weight-bold">{app.app}</span>
+                        <span className={`badge rounded-pill ${isActive ? 'badge-light' : 'badge-secondary'}`}>{msgCount}</span>
+                      </motion.button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
 
-            {/* Activity Feed */}
-            <div className="col-lg-4 mb-4">
-              <div className="card shadow-sm border-0 rounded-lg h-100">
-                <div className="card-body">
-                  <h5 className="header-title mb-4">Recent Activity</h5>
-                  
-                  <div className="timeline">
-                    {recentActivity.map((activity, index) => (
-                      <div key={activity.id} className="d-flex mb-3">
-                        <div className="mr-3 mt-1">
-                          {activity.risk === 'high' ? (
-                            <div className="rounded-circle bg-danger text-white d-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px' }}>
-                              <AlertTriangle size={16} />
-                            </div>
-                          ) : (
-                            <div className="rounded-circle bg-light text-primary d-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px' }}>
-                              <Activity size={16} />
-                            </div>
-                          )}
+            <div className="row">
+              {/* Conversations for this app */}
+              <div className="col-lg-5 mb-4">
+                <div className="card shadow-sm border-0 rounded-lg h-100">
+                  <div className="card-body">
+                    <h5 className="header-title mb-4">Conversations</h5>
+                    {(activeApp?.conversations || []).map((c, i) => (
+                      <div key={i} className="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
+                        <div className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold flex-shrink-0"
+                          style={{ width: 40, height: 40 }}>
+                          {c.contact.charAt(0).toUpperCase()}
                         </div>
-                        <div className="flex-grow-1 border-bottom pb-2">
-                          <p className={`m-0 ${activity.risk === 'high' ? 'text-danger font-weight-bold' : 'text-dark'}`} style={{ fontSize: '14px' }}>
-                            {activity.text}
-                          </p>
-                          <small className="text-muted">{activity.time}</small>
+                        <div className="flex-grow-1 min-w-0">
+                          <h6 className="m-0 text-truncate">{c.contact}</h6>
+                          <p className="m-0 text-truncate text-muted small">{c.messages[c.messages.length - 1]?.text}</p>
                         </div>
+                        <small className="text-muted flex-shrink-0">{timeAgo(c.lastTime)}</small>
                       </div>
                     ))}
                   </div>
+                </div>
+              </div>
 
+              {/* Recent Activity Feed */}
+              <div className="col-lg-7 mb-4">
+                <div className="card shadow-sm border-0 rounded-lg h-100">
+                  <div className="card-body">
+                    <h5 className="header-title mb-4">Recent Activity — {activeApp?.app}</h5>
+                    <div className="timeline">
+                      {activityFeed.length === 0 ? (
+                        <p className="text-muted">No recent activity.</p>
+                      ) : activityFeed.map((a) => (
+                        <div key={a.id} className="d-flex mb-3">
+                          <div className="mr-3 mt-1">
+                            <div className="rounded-circle bg-light text-primary d-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px' }}>
+                              <MessageCircle size={16} />
+                            </div>
+                          </div>
+                          <div className="flex-grow-1 border-bottom pb-2">
+                            <p className="m-0 text-dark" style={{ fontSize: '14px' }}>
+                              <b>{a.contact}</b>: {a.text}
+                            </p>
+                            <small className="text-muted">{timeAgo(a.time)}</small>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </motion.div>
+          </>
+        )}
 
       </div>
     </div>
